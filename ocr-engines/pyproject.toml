@@ -1,0 +1,28 @@
+[project]
+name = "ocr-engines"
+version = "0.1.0"
+description = "Inference engines and backend services for OCR Arena"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "paddleocr[doc-parser]>=3.3.0",
+    "transformers @ git+https://github.com/huggingface/transformers.git",
+    "torch==2.8.0",
+    "vllm==0.10.2",
+    "uvloop",
+    "xformers",
+    "einops",
+    "ultralytics>=8.4.57",
+    "accelerate",
+    "qwen-vl-utils",
+    "cairosvg",
+    "av",
+    "gradio",
+    "spaces",
+    "pypdfium2",
+    "pymupdf",
+    "addict",
+]
+
+[dependency-groups]
+dev = []

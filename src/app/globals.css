@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --fluent-bg: #f3f2f1;
+  --fluent-surface: #ffffff;
+  --fluent-border: #edebe9;
+  --fluent-border-strong: #d2d0ce;
+  --fluent-text: #323130;
+  --fluent-text-secondary: #605e5c;
+  --fluent-text-muted: #8a8886;
+  --fluent-primary: #0078d4;
+  --fluent-primary-hover: #106ebe;
+  --fluent-primary-pressed: #005a9e;
+  --fluent-header: #0078d4;
+  --fluent-subheader: #faf9f8;
+  --fluent-shadow: 0 1.6px 3.6px rgba(0, 0, 0, 0.13), 0 0.3px 0.9px rgba(0, 0, 0, 0.11);
+  --font-fluent: "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto", "Helvetica Neue", sans-serif;
+}
+
+.dark {
+  --fluent-bg: #1b1a19;
+  --fluent-surface: #292827;
+  --fluent-border: #3b3a39;
+  --fluent-border-strong: #484644;
+  --fluent-text: #f3f2f1;
+  --fluent-text-secondary: #c8c6c4;
+  --fluent-text-muted: #a19f9d;
+  --fluent-subheader: #252423;
+  --fluent-header: #0078d4;
+}
+
+@theme inline {
+  --color-background: var(--fluent-bg);
+  --color-foreground: var(--fluent-text);
+  --font-sans: var(--font-fluent);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--fluent-bg);
+  color: var(--fluent-text);
+  font-family: var(--font-fluent);
+}
+
+/* Fluent UI utility classes */
+.fluent-surface { background: var(--fluent-surface); }
+.fluent-border { border-color: var(--fluent-border); }
+.fluent-text { color: var(--fluent-text); }
+.fluent-text-secondary { color: var(--fluent-text-secondary); }
+.fluent-primary { color: var(--fluent-primary); }
+.fluent-btn-primary {
+  background: var(--fluent-primary);
+  color: #fff;
+  border-radius: 2px;
+  font-weight: 600;
+  transition: background 0.1s;
+}
+.fluent-btn-primary:hover:not(:disabled) { background: var(--fluent-primary-hover); }
+.fluent-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.fluent-btn-secondary {
+  background: var(--fluent-surface);
+  color: var(--fluent-primary);
+  border: 1px solid var(--fluent-border-strong);
+  border-radius: 2px;
+  font-weight: 600;
+}
+.fluent-btn-secondary:hover { background: var(--fluent-bg); }
+.fluent-tab-active {
+  color: var(--fluent-primary);
+  border-bottom: 2px solid var(--fluent-primary);
+}
+.fluent-panel {
+  background: var(--fluent-surface);
+  border: 1px solid var(--fluent-border);
+}

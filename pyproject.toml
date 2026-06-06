@@ -1,0 +1,9 @@
+[project]
+name = "ocr-arena"
+version = "0.1.0"
+description = "E2E tests for OCR Arena"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "playwright",
+]

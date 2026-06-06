@@ -1,0 +1,7 @@
+.next
+.git
+.gitignore
+.gitmodules
+node_modules
+out
+andrej-karpathy-skills
