@@ -99,16 +99,22 @@ if not hasattr(import_utils, "is_torch_fx_available"):
     import_utils.is_torch_fx_available = lambda: True
 
 from transformers import AutoModelForCausalLM, AutoProcessor
-from deepseek_vl2.models import DeepseekVLV2Processor, DeepseekVLV2ForCausalLM
+try:
+    from deepseek_vl2.models import DeepseekVLV2Processor, DeepseekVLV2ForCausalLM
+    from deepseek_vl2.models.modeling_deepseek import DeepseekV2ForCausalLM
+    HAS_DEEPSEEK_VL2 = True
+except ImportError:
+    HAS_DEEPSEEK_VL2 = False
 
-# Patch for older models compatibility with newer transformers/accelerate
-DeepseekVLV2ForCausalLM.all_tied_weights_keys = property(lambda self: {})
-from transformers.generation.utils import GenerationMixin
-from deepseek_vl2.models.modeling_deepseek import DeepseekV2ForCausalLM
-if GenerationMixin not in DeepseekV2ForCausalLM.__bases__:
-    DeepseekV2ForCausalLM.__bases__ = DeepseekV2ForCausalLM.__bases__ + (GenerationMixin,)
-if GenerationMixin not in DeepseekVLV2ForCausalLM.__bases__:
-    DeepseekVLV2ForCausalLM.__bases__ = DeepseekVLV2ForCausalLM.__bases__ + (GenerationMixin,)
+if HAS_DEEPSEEK_VL2:
+    # Patch for older models compatibility with newer transformers/accelerate
+    DeepseekVLV2ForCausalLM.all_tied_weights_keys = property(lambda self: {})
+    from transformers.generation.utils import GenerationMixin
+    if GenerationMixin not in DeepseekV2ForCausalLM.__bases__:
+        DeepseekV2ForCausalLM.__bases__ = DeepseekV2ForCausalLM.__bases__ + (GenerationMixin,)
+    if GenerationMixin not in DeepseekVLV2ForCausalLM.__bases__:
+        DeepseekVLV2ForCausalLM.__bases__ = DeepseekVLV2ForCausalLM.__bases__ + (GenerationMixin,)
+
 from transformers.cache_utils import DynamicCache
 if not hasattr(DynamicCache, "seen_tokens"):
     DynamicCache.seen_tokens = property(lambda self: self.get_seq_length())
@@ -118,24 +124,25 @@ if not hasattr(DynamicCache, "get_usable_length"):
     DynamicCache.get_usable_length = lambda self, seq_length=None, layer_idx=0: self.get_seq_length(layer_idx)
 
 # Patch prepare_inputs_for_generation for empty Cache compatibility (modern transformers version compatibility)
-original_prepare = DeepseekV2ForCausalLM.prepare_inputs_for_generation
+if HAS_DEEPSEEK_VL2:
+    original_prepare = DeepseekV2ForCausalLM.prepare_inputs_for_generation
 
-def patched_prepare(self, input_ids, past_key_values=None, attention_mask=None, inputs_embeds=None, **kwargs):
-    model_inputs = original_prepare(self, input_ids, past_key_values=past_key_values, attention_mask=attention_mask, inputs_embeds=inputs_embeds, **kwargs)
-    if inputs_embeds is not None and past_key_values is not None:
-        is_empty = False
-        if hasattr(past_key_values, "get_seq_length") and past_key_values.get_seq_length() == 0:
-            is_empty = True
-        elif not hasattr(past_key_values, "get_seq_length") and len(past_key_values) == 0:
-            is_empty = True
-            
-        if is_empty:
-            model_inputs["inputs_embeds"] = inputs_embeds
-            if "input_ids" in model_inputs:
-                del model_inputs["input_ids"]
-    return model_inputs
+    def patched_prepare(self, input_ids, past_key_values=None, attention_mask=None, inputs_embeds=None, **kwargs):
+        model_inputs = original_prepare(self, input_ids, past_key_values=past_key_values, attention_mask=attention_mask, inputs_embeds=inputs_embeds, **kwargs)
+        if inputs_embeds is not None and past_key_values is not None:
+            is_empty = False
+            if hasattr(past_key_values, "get_seq_length") and past_key_values.get_seq_length() == 0:
+                is_empty = True
+            elif not hasattr(past_key_values, "get_seq_length") and len(past_key_values) == 0:
+                is_empty = True
+                
+            if is_empty:
+                model_inputs["inputs_embeds"] = inputs_embeds
+                if "input_ids" in model_inputs:
+                    del model_inputs["input_ids"]
+        return model_inputs
 
-DeepseekV2ForCausalLM.prepare_inputs_for_generation = patched_prepare
+    DeepseekV2ForCausalLM.prepare_inputs_for_generation = patched_prepare
 
 app = FastAPI()
 
@@ -145,6 +152,8 @@ processor = None
 
 def get_model():
     global model, processor
+    if not HAS_DEEPSEEK_VL2:
+        raise Exception("deepseek_vl2 library is not installed.")
     if model is None:
         print("==> Loading DeepSeek-VL2-Tiny model...")
         processor = DeepseekVLV2Processor.from_pretrained(MODEL_NAME, trust_remote_code=True, local_files_only=True)
@@ -173,7 +182,17 @@ async def layout_parsing(request: Request):
         image = Image.open(io.BytesIO(img_bytes)).convert("RGB")
         image = ImageOps.exif_transpose(image)
 
-        m, p = get_model()
+        try:
+            m, p = get_model()
+        except Exception as e:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "errorCode": 503,
+                    "errorMsg": f"Layout parsing is not available for deepseek-vl2. Details: {str(e)}",
+                    "result": {}
+                }
+            )
         tokenizer = p.tokenizer
 
         # Format conversation

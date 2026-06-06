@@ -14,7 +14,12 @@ import sys
 # Dynamically add the submodule path to import dots_ocr
 sys.path.append("/app/dots.ocr-demo-2026/dots.ocr")
 
-from dots_ocr.parser import DotsOCRParser
+try:
+    from dots_ocr.parser import DotsOCRParser
+    HAS_PARSER = True
+except ImportError:
+    print("==> Warning: dots_ocr module not found. Layout-parsing will not be available.")
+    HAS_PARSER = False
 
 app = FastAPI()
 
@@ -23,19 +28,56 @@ parser = None
 
 def get_parser():
     global parser
+    if not HAS_PARSER:
+        return None
     if parser is None:
         vllm_host = os.environ.get("VLLM_SERVER_HOST", "ocr-dotsocr-vllm-server")
         vllm_port = int(os.environ.get("VLLM_SERVER_PORT", "8000"))
         print(f"==> Loading Dots.OCR parser pointing to {vllm_host}:{vllm_port}...")
-        parser = DotsOCRParser(
-            ip=vllm_host,
-            port=vllm_port,
-            dpi=200,
-            min_pixels=100000,
-            max_pixels=1254400,
-            max_completion_tokens=2048
-        )
+        try:
+            parser = DotsOCRParser(
+                ip=vllm_host,
+                port=vllm_port,
+                dpi=200,
+                min_pixels=100000,
+                max_pixels=1254400,
+                max_completion_tokens=2048
+            )
+        except Exception as e:
+            print(f"Error loading parser: {e}")
+            parser = None
     return parser
+
+import urllib.request
+
+def run_vllm_ocr(vllm_url: str, model_name: str, file_data: str) -> str:
+    if "," in file_data:
+        file_data = file_data.split(",")[1]
+    payload = {
+        "model": model_name,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "OCR:"},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/png;base64,{file_data}"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+    req = urllib.request.Request(
+        vllm_url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"}
+    )
+    with urllib.request.urlopen(req) as res:
+        response = json.loads(res.read().decode("utf-8"))
+        return response["choices"][0]["message"]["content"]
 
 @app.post("/layout-parsing")
 @app.post("/v1/layout-parsing")
@@ -46,13 +88,45 @@ async def layout_parsing(request: Request):
         if not file_data:
             return JSONResponse(status_code=400, content={"error": "No file data provided"})
 
+        p = get_parser()
+        if p is None:
+            # Fallback to direct OCR via vLLM
+            try:
+                vllm_host = os.environ.get("VLLM_SERVER_HOST", "ocr-dotsocr-vllm-server")
+                vllm_port = int(os.environ.get("VLLM_SERVER_PORT", "8000"))
+                vllm_url = f"http://{vllm_host}:{vllm_port}/v1/chat/completions"
+                output_text = run_vllm_ocr(vllm_url, "model", file_data)
+                return {
+                    "errorCode": 0,
+                    "errorMsg": "",
+                    "result": {
+                        "layoutParsingResults": [
+                            {
+                                "markdown": {
+                                    "text": output_text
+                                },
+                                "outputImages": {}
+                            }
+                        ]
+                    }
+                }
+            except Exception as ex:
+                return JSONResponse(
+                    status_code=503,
+                    content={
+                        "errorCode": 503,
+                        "errorMsg": f"Layout parsing parser unavailable and direct OCR fallback failed: {ex}",
+                        "result": {}
+                    }
+                )
+
+
         if "," in file_data:
             file_data = file_data.split(",")[1]
 
         img_bytes = base64.b64decode(file_data)
         image = Image.open(io.BytesIO(img_bytes)).convert("RGB")
 
-        p = get_parser()
         temp_dir = tempfile.mkdtemp()
         filename = f"api_{uuid.uuid4().hex[:8]}"
 

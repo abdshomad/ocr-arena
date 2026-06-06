@@ -119,26 +119,13 @@ def get_model():
         
         # DeepSeek-V2 MoE and MLA specific defaults
         deepseek_v2_defaults = {
-            "moe_layer_freq": 1,
-            "routed_scaling_factor": 1.0,
-            "ep_size": 1,
-            "n_shared_experts": None,
-            "n_routed_experts": None,
-            "num_experts_per_tok": None,
-            "first_k_dense_replace": 0,
-            "norm_topk_prob": False,
-            "scoring_func": "softmax",
-            "aux_loss_alpha": 0.001,
-            "seq_aux": True,
-            "use_mla": True,
-            "topk_method": "gready",
-            "n_group": None,
-            "topk_group": None,
-            "kv_lora_rank": 512,
-            "q_lora_rank": 1536,
-            "qk_rope_head_dim": 64,
-            "v_head_dim": 128,
-            "qk_nope_head_dim": 128,
+            "moe_layer_freq": 1, "routed_scaling_factor": 1.0, "ep_size": 1,
+            "n_shared_experts": None, "n_routed_experts": None, "num_experts_per_tok": None,
+            "first_k_dense_replace": 0, "norm_topk_prob": False, "scoring_func": "softmax",
+            "aux_loss_alpha": 0.001, "seq_aux": True, "use_mla": True,
+            "topk_method": "gready", "n_group": None, "topk_group": None,
+            "kv_lora_rank": 512, "q_lora_rank": 1536, "qk_rope_head_dim": 64,
+            "v_head_dim": 128, "qk_nope_head_dim": 128,
         }
         for k, v in deepseek_v2_defaults.items():
             if not hasattr(config, k):
@@ -172,7 +159,17 @@ async def layout_parsing(request: Request):
         image = ImageOps.exif_transpose(image)
 
         # Load model/tokenizer
-        m, t = get_model()
+        try:
+            m, t = get_model()
+        except Exception as e:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "errorCode": 503,
+                    "errorMsg": f"Layout parsing is not available for deepseek-ocr-2. Details: {str(e)}",
+                    "result": {}
+                }
+            )
 
         # Temporary file for model input
         with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:

@@ -64,6 +64,11 @@ services:
       - PIPELINE_LIGHTON_OCR_2_1B_URL=http://ocr-lighton-ocr-2-1b:8123/layout-parsing
       - PIPELINE_DOTS_OCR_URL=http://ocr-dots-ocr:8124/layout-parsing
       - PIPELINE_GLM_OCR_URL=http://ocr-glm-ocr:8125/layout-parsing
+      - PIPELINE_CHANDRA_URL=http://ocr-chandra:8126/layout-parsing
+      - PIPELINE_GEMMA4_URL=http://ocr-gemma4:8127/layout-parsing
+      - PIPELINE_QWEN3VL_URL=http://ocr-qwen3vl:8128/layout-parsing
+      - PIPELINE_LITPARSE_URL=http://ocr-engine-litparse:8129/layout-parsing
+      - PIPELINE_MINERU_URL=http://ocr-mineru-diffusion:8130/layout-parsing
     depends_on:
       - db
       - pipeline-paddleocr
@@ -288,12 +293,88 @@ services:
       - ./ocr-engines/glm-ocr:/app/glm-ocr
       - ./glm-ocr-demo-2026:/app/glm-ocr-demo-2026
 
+  # --- Engine 9: Chandra OCR 2 ---
+  ocr-chandra:
+    <<: *vllm-base
+    container_name: ocr-engine-chandra
+    command: ["./chandra-ocr-2/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8126
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/chandra-ocr-2:/app/chandra-ocr-2
+
+  # --- Engine 10: Gemma 4 ---
+  ocr-gemma4:
+    <<: *vllm-base
+    container_name: ocr-engine-gemma4
+    command: ["./gemma-4/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8127
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/gemma-4:/app/gemma-4
+
+  # --- Engine 11: Qwen3-VL ---
+  ocr-qwen3vl:
+    <<: *vllm-base
+    container_name: ocr-engine-qwen3vl
+    command: ["./qwen3-vl/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8128
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/qwen3-vl:/app/qwen3-vl
+
+  # --- Engine 12: LiteParse ---
+  ocr-engine-litparse:
+    <<: *vllm-base
+    container_name: ocr-engine-litparse
+    command: ["./litparse/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8129
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/litparse:/app/litparse
+
+  # --- Engine 13: MinerU-Diffusion ---
+  ocr-mineru-diffusion:
+    <<: *vllm-base
+    container_name: ocr-engine-mineru-diffusion
+    command: ["./mineru-diffusion/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8130
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/mineru-diffusion:/app/mineru-diffusion
+
 volumes:
   hf_cache:
     name: ocr_arena_hf_cache
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../../../.cache/huggingface
   paddle_cache:
     name: ocr_arena_paddle_cache
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../../../.paddleocr
   paddlex_cache:
     name: ocr_arena_paddlex_cache
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../../../.paddlex
   pgdata:
     name: ocr_arena_pgdata
+

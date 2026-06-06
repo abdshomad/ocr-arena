@@ -91,6 +91,7 @@ export const ArenaTab: React.FC<ArenaTabProps> = ({
           <div className={`flex items-center gap-1.5 select-none ${!diffBaselineReady ? "opacity-50 cursor-not-allowed" : ""}`}>
             <label className="flex items-center gap-1 cursor-pointer">
               <input
+                id="show-diffs-checkbox"
                 type="checkbox"
                 disabled={!diffBaselineReady}
                 checked={showDiffs}

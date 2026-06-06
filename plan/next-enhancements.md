@@ -40,6 +40,19 @@ This document lists all remaining pending enhancement tasks for the OCR Arena ap
   - **Objective**: Enable users to edit/override the parsed OCR text directly inside the selected crop inspector modal. Submitting these corrections will automatically populate them into the Ground Truth Reference text block corresponding to that section, recalculating CER/WER metrics instantly.
   - **Verification**: Double-clicking a bounding box to open the inspector, editing the parsed text, and clicking "Save to Reference" updates the Ground Truth Reference text and recalculates accuracy.
 
+- [PENDING] **Task 27**: Custom Character/Word Regex Exclusion Filters for CER/WER Benchmarking
+  - **Objective**: Allow users to define a list of regex or character patterns (e.g. whitespace, punctuation, specific metadata fields) to ignore during CER/WER calculations in the Ground Truth comparison.
+  - **Verification**: Inputting a pattern like `\s+` or `[.,\/#!$%\^&\*;:{}=\-_`~()]` recalculates the CER/WER metrics instantly, ignoring those matching segments in both the OCR results and ground truth text.
+
+- [PENDING] **Task 28**: Interactive Visual Block Merger & Regional Re-OCR
+  - **Objective**: Allow users to select multiple adjacent bounding boxes on the Document Canvas and click "Merge & Re-OCR" to analyze the combined rectangular region as a single block across all engines.
+  - **Verification**: Selecting multiple blocks, clicking merge, and running re-analysis displays the combined recognized text in the overlay tooltips and comparison cards.
+
+- [PENDING] **Task 29**: Live PDF Interactive Page-by-Page Comparison Layout
+  - **Objective**: Provide a split/grid view option that renders two different pages of a multi-page PDF side-by-side (or same page from different engine perspectives) with synchronized zooming/panning.
+  - **Verification**: Activating "Page Compare Mode" allows selecting different page numbers for the left/right viewer frames and synchronously zooms both.
+
+
 ### Section 2: Scan History
 
 - [DONE] **Task 6**: Interactive Timeline Grouping
@@ -78,6 +91,19 @@ This document lists all remaining pending enhancement tasks for the OCR Arena ap
   - **Objective**: Integrate a regression reporting tool that compares a selected run against a historical run baseline of the same image, automatically highlighting if the new run shows regression in accuracy (CER/WER) or latency.
   - **Verification**: Selecting a run, choosing a baseline run of the same file, and clicking "Check regression" displays a summary report highlighting changes in metrics (e.g. latency increase or accuracy drop).
 
+- [PENDING] **Task 30**: Scan History Tag-Based Analytics Summary Drawer
+  - **Objective**: Build an interactive drawer/sidebar inside Scan History that dynamically plots distributions, avg latency, and error rates of historical runs matching the currently selected tags.
+  - **Verification**: Toggling the analytics drawer shows charts and metrics that update dynamically as tags are selected/deselected in the filter header.
+
+- [PENDING] **Task 31**: Scan History Export to Excel / CSV with Embedded Text Diff
+  - **Objective**: Enhance the CSV/Excel export tool in the history table to include character and word error metrics against reference ground truths (where available) as well as the raw text.
+  - **Verification**: Triggering export downloads a file containing detailed metrics, file sizes, processing details, and accuracy benchmarks.
+
+- [PENDING] **Task 32**: History Runs Auto-Grouping & Duplicate Detection
+  - **Objective**: Implement automatic detection of scans performed on identical or highly similar images (using file hashing or visual similarity), offering an option to collapse duplicates into a single run history node.
+  - **Verification**: Performing multiple scans of the same file shows them grouped under a single parent entry in the history list, with an expandable history of versions.
+
+
 ### Section 3: Telemetry & Analytics
 
 - [DONE] **Task 12**: Latency Percentile Performance Breakdown (Radar/Polar Area Chart)
@@ -115,3 +141,15 @@ This document lists all remaining pending enhancement tasks for the OCR Arena ap
 - [PENDING] **Task 26**: Telemetry Comparison Export to CSV & JSON Reports
   - **Objective**: Provide an option to export aggregated telemetry statistics (averages, percentiles, SLA breach rates, and cost calculations for each model) as downloadable CSV or JSON files.
   - **Verification**: Clicking "Export Telemetry Summary" downloads a file containing the calculated metrics.
+
+- [PENDING] **Task 33**: Real-time Engine Latency & Error Rate Alerts Configurator
+  - **Objective**: Allow administrators to configure alert thresholds (e.g. error rate > 5% in 5 min, latency > 5s) directly inside the Telemetry panel, showing alert flags next to the affected engine models.
+  - **Verification**: Setting a latency alert to 2.0s triggers visual alert badges on the Telemetry page for any engine exceeding that SLA limit in recent history.
+
+- [PENDING] **Task 34**: Telemetry Historical Comparison Baseline & Drift Analysis
+  - **Objective**: Enable comparing telemetry metrics between two timeframes (e.g. this week vs. last week) to detect engine performance degradation, server drift, or response time anomalies.
+  - **Verification**: Selecting date range baseline and comparison range displays delta percentages (+/- %) for latency, success rate, and cost on each engine card.
+
+- [PENDING] **Task 35**: Engine Cost Projection & Budget Allocation Simulator
+  - **Objective**: Create an interactive simulator in the Telemetry tab where users can input expected monthly document volume and average document sizes to project total monthly cost across different engine combinations.
+  - **Verification**: Adjusting the monthly document volume slider recalculates and displays the cost projections side-by-side for each engine model, recommending the most cost-efficient configuration.

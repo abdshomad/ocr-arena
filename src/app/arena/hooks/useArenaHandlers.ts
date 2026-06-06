@@ -74,7 +74,12 @@ export function useArenaHandlers(
       lightonocr: { status: "pending", text: "", time: 0 },
       glm: { status: "pending", text: "", time: 0 },
       dots: { status: "pending", text: "", time: 0 },
-      deepseek: { status: "pending", text: "", time: 0 }
+      deepseek: { status: "pending", text: "", time: 0 },
+      chandra: { status: "pending", text: "", time: 0 },
+      gemma4: { status: "pending", text: "", time: 0 },
+      qwen3vl: { status: "pending", text: "", time: 0 },
+      litparse: { status: "pending", text: "", time: 0 },
+      "mineru-diffusion": { status: "pending", text: "", time: 0 }
     };
     state.setResults(initialResults);
 

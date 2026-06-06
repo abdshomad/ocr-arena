@@ -32,7 +32,7 @@ async def run_workspace_tests():
         
         # Step 3: Wait for OCR to complete
         print("Waiting for OCR processing to complete...")
-        await page.wait_for_selector("span:has-text('done')", timeout=90000)
+        await page.wait_for_selector("button:has-text('Run analysis')", timeout=90000)
         await page.wait_for_timeout(2000)
         
         print("Taking screenshot 03-step3-default-results.jpg...")
@@ -82,7 +82,7 @@ async def run_workspace_tests():
         
         # Step 3b: Click the "Diff" checkbox
         print("Toggling Diff checkbox...")
-        await page.locator("label:has-text('Diff') input[type='checkbox']").click(force=True)
+        await page.locator("#show-diffs-checkbox").click(force=True)
         await page.wait_for_timeout(2000)
         
         print("Taking screenshot 03-step3b-diff-mode-results.jpg...")
@@ -103,7 +103,7 @@ async def run_workspace_tests():
         
         # Untoggle Diff checkbox
         print("Untoggling Diff checkbox...")
-        await page.locator("label:has-text('Diff') input[type='checkbox']").click(force=True)
+        await page.locator("#show-diffs-checkbox").click(force=True)
         await page.wait_for_timeout(1000)
         
         # Step 3e: Toggle Ground Truth Benchmarking

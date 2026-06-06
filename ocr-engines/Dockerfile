@@ -31,7 +31,9 @@ RUN uv pip install --python .venv "${FLASH_ATTN_WHEEL}"
 # Install nvidia/nemotron-ocr-v2 package (avoiding downloading large weights at build time)
 RUN uv pip install --python .venv hatchling editables && \
     GIT_LFS_SKIP_SMUDGE=1 git clone --depth=1 https://huggingface.co/nvidia/nemotron-ocr-v2 && \
-    uv pip install --python .venv --no-build-isolation -e ./nemotron-ocr-v2/nemotron-ocr
+    uv pip install --python .venv --no-build-isolation -e ./nemotron-ocr-v2/nemotron-ocr && \
+    uv pip install --python .venv attrdict && \
+    uv pip install --python .venv git+https://github.com/deepseek-ai/DeepSeek-VL2.git --no-deps
 
 # Patch paddlex vllm model file to avoid KeyError: 'pixel_values' on decode/text-only steps
 RUN /app/.venv/bin/python -c 'path = "/app/.venv/lib/python3.12/site-packages/paddlex/inference/genai/models/paddleocr_vl_09b/_vllm.py"; content = open(path).read(); target = "def get_multimodal_embeddings(self, **kwargs):\n            pixel_values = kwargs[\"pixel_values\"]"; replacement = "def get_multimodal_embeddings(self, **kwargs):\n            if \"pixel_values\" not in kwargs or kwargs[\"pixel_values\"] is None:\n                return []\n            pixel_values = kwargs[\"pixel_values\"]"; assert target in content, "Target not found in _vllm.py"; open(path, "w").write(content.replace(target, replacement))'

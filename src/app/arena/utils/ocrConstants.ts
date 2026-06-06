@@ -12,6 +12,11 @@ export interface ResultsMap {
   glm: EngineResult;
   dots: EngineResult;
   deepseek: EngineResult;
+  chandra: EngineResult;
+  gemma4: EngineResult;
+  qwen3vl: EngineResult;
+  litparse: EngineResult;
+  "mineru-diffusion": EngineResult;
 }
 
 export const SAMPLE_FILES = [
@@ -35,7 +40,12 @@ export const engines = [
   { id: "lightonocr", name: "LightOnOCR-2-1B", logo: "⚡" },
   { id: "glm", name: "GLM-OCR", logo: "🧠" },
   { id: "dots", name: "Dots OCR", logo: "⚫" },
-  { id: "deepseek", name: "DeepSeek OCR 2", logo: "🐳" }
+  { id: "deepseek", name: "DeepSeek OCR 2", logo: "🐳" },
+  { id: "chandra", name: "Chandra OCR 2", logo: "🌙" },
+  { id: "gemma4", name: "Gemma 4", logo: "💎" },
+  { id: "qwen3vl", name: "Qwen3-VL", logo: "🎈" },
+  { id: "litparse", name: "LiteParse", logo: "📄" },
+  { id: "mineru-diffusion", name: "MinerU-Diffusion", logo: "⚒️" }
 ] as const;
 
 export type EngineId = typeof engines[number]["id"];
@@ -61,7 +71,12 @@ export const ENGINE_COLORS: Record<string, string> = {
   lightonocr: "#8b5cf6",
   glm: "#3b82f6",
   dots: "#ec4899",
-  deepseek: "#06b6d4"
+  deepseek: "#06b6d4",
+  chandra: "#eab308",
+  gemma4: "#ef4444",
+  qwen3vl: "#ec4899",
+  litparse: "#14b8a6",
+  "mineru-diffusion": "#6366f1"
 };
 
 export const ENGINE_DEFAULT_COLOR = "#64748b";
@@ -72,7 +87,12 @@ export const ENGINE_PRICING: Record<string, number> = {
   lightonocr: 0.30,
   glm: 1.50,
   dots: 0.80,
-  deepseek: 1.00
+  deepseek: 1.00,
+  chandra: 1.20,
+  gemma4: 1.80,
+  qwen3vl: 0.90,
+  litparse: 0.40,
+  "mineru-diffusion": 1.60
 };
 
 export interface DiffPart {

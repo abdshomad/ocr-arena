@@ -5,7 +5,7 @@ from playwright.async_api import async_playwright
 
 # Allow importing helpers from the tests folder
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from tests.helpers import setup_browser, ensure_screenshots_dir
+from tests.helpers import setup_browser, ensure_screenshots_dir, setup_history_api_mock
 
 async def run_history_tests():
     ensure_screenshots_dir()
@@ -14,6 +14,9 @@ async def run_history_tests():
         
         # Setup dialog listener to auto-accept confirmation dialogs
         page.on("dialog", lambda dialog: dialog.accept())
+        
+        # Set up mock history responses
+        await setup_history_api_mock(page)
         
         # Step 6: Navigate to History Page
         print("Navigating to http://localhost:7890/history...")

@@ -201,6 +201,16 @@ export async function POST(req: NextRequest) {
       pipelineUrl = process.env.PIPELINE_DOTS_OCR_URL || "http://ocr-dots-ocr:8124/layout-parsing";
     } else if (engine === "glm-ocr" || engine === "glm") {
       pipelineUrl = process.env.PIPELINE_GLM_OCR_URL || "http://ocr-glm-ocr:8125/layout-parsing";
+    } else if (engine === "chandra") {
+      pipelineUrl = process.env.PIPELINE_CHANDRA_URL || "http://ocr-chandra:8126/layout-parsing";
+    } else if (engine === "gemma4") {
+      pipelineUrl = process.env.PIPELINE_GEMMA4_URL || "http://ocr-gemma4:8127/layout-parsing";
+    } else if (engine === "qwen3vl") {
+      pipelineUrl = process.env.PIPELINE_QWEN3VL_URL || "http://ocr-qwen3vl:8128/layout-parsing";
+    } else if (engine === "litparse") {
+      pipelineUrl = process.env.PIPELINE_LITPARSE_URL || "http://ocr-engine-litparse:8129/layout-parsing";
+    } else if (engine === "mineru-diffusion") {
+      pipelineUrl = process.env.PIPELINE_MINERU_URL || "http://ocr-mineru-diffusion:8130/layout-parsing";
     }
 
     const payload = {
@@ -223,7 +233,20 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Backend pipeline error: ${errText}`);
+      let errorMsg = errText;
+      try {
+        const errJson = JSON.parse(errText);
+        errorMsg = errJson.errorMsg || errJson.error || errText;
+      } catch {}
+
+      const elapsedMs = Date.now() - startTime;
+      await logArenaRun(image, engine, "failed", errorMsg, elapsedMs);
+
+      return NextResponse.json({
+        success: false,
+        error: errorMsg,
+        elapsedMs
+      });
     }
 
     const data = await response.json();
