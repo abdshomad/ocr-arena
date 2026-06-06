@@ -14,18 +14,12 @@ export function useArenaState() {
 
   const [showGallery, setShowGallery] = useState<boolean>(true);
   const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [results, setResults] = useState<ResultsMap>({
-    nemotron: { status: "pending", text: "", time: 0 },
-    paddle: { status: "pending", text: "", time: 0 },
-    lightonocr: { status: "pending", text: "", time: 0 },
-    glm: { status: "pending", text: "", time: 0 },
-    dots: { status: "pending", text: "", time: 0 },
-    deepseek: { status: "pending", text: "", time: 0 },
-    chandra: { status: "pending", text: "", time: 0 },
-    gemma4: { status: "pending", text: "", time: 0 },
-    qwen3vl: { status: "pending", text: "", time: 0 },
-    litparse: { status: "pending", text: "", time: 0 },
-    "mineru-diffusion": { status: "pending", text: "", time: 0 }
+  const [results, setResults] = useState<ResultsMap>(() => {
+    const res: any = {};
+    engines.forEach(e => {
+      res[e.id] = { status: "pending", text: "", time: 0 };
+    });
+    return res as ResultsMap;
   });
 
   const [activeCompareTab, setActiveCompareTab] = useState<string>("all");
@@ -57,10 +51,9 @@ export function useArenaState() {
   const [syncScroll, setSyncScroll] = useState<boolean>(false);
   const [compareLayouts, setCompareLayouts] = useState<boolean>(false);
   const [gridCols, setGridCols] = useState<1 | 2 | 3>(3);
-  const [visibleEngines, setVisibleEngines] = useState<string[]>([
-    "nemotron", "paddle", "lightonocr", "glm", "dots", "deepseek",
-    "chandra", "gemma4", "qwen3vl", "litparse", "mineru-diffusion"
-  ]);
+  const [visibleEngines, setVisibleEngines] = useState<string[]>(() =>
+    engines.map(e => e.id as string)
+  );
   const [selectedCrop, setSelectedCrop] = useState<{ engineId: string; block: any; cropUrl: string } | null>(null);
   const [cropModeActive, setCropModeActive] = useState<boolean>(false);
   const [cropSelection, setCropSelection] = useState<{ x: number; y: number; w: number; h: number } | null>(null);

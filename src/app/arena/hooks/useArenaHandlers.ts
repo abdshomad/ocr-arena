@@ -68,19 +68,10 @@ export function useArenaHandlers(
     state.setIsCustomUpload(customUpload);
     state.setSelectedPageIndex(0);
 
-    const initialResults: ResultsMap = {
-      nemotron: { status: "pending", text: "", time: 0 },
-      paddle: { status: "pending", text: "", time: 0 },
-      lightonocr: { status: "pending", text: "", time: 0 },
-      glm: { status: "pending", text: "", time: 0 },
-      dots: { status: "pending", text: "", time: 0 },
-      deepseek: { status: "pending", text: "", time: 0 },
-      chandra: { status: "pending", text: "", time: 0 },
-      gemma4: { status: "pending", text: "", time: 0 },
-      qwen3vl: { status: "pending", text: "", time: 0 },
-      litparse: { status: "pending", text: "", time: 0 },
-      "mineru-diffusion": { status: "pending", text: "", time: 0 }
-    };
+    const initialResults = engines.reduce((acc, e) => {
+      acc[e.id] = { status: "pending", text: "", time: 0 };
+      return acc;
+    }, {} as any) as ResultsMap;
     state.setResults(initialResults);
 
     for (const engine of engines) {

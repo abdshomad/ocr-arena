@@ -69,6 +69,36 @@ services:
       - PIPELINE_QWEN3VL_URL=http://ocr-qwen3vl:8128/layout-parsing
       - PIPELINE_LITPARSE_URL=http://ocr-engine-litparse:8129/layout-parsing
       - PIPELINE_MINERU_URL=http://ocr-mineru-diffusion:8130/layout-parsing
+      - PIPELINE_LIGHTONOCR_ORIGINAL_URL=http://ocr-lightonocr-original:8131/layout-parsing
+      - PIPELINE_DOCOWL_URL=http://ocr-docowl:8132/layout-parsing
+      - PIPELINE_PHI4_OCR_URL=http://ocr-phi4-ocr:8133/layout-parsing
+      - PIPELINE_SMOL_DOCLING_URL=http://ocr-smol-docling:8134/layout-parsing
+      - PIPELINE_GRANITE_DOCLING_URL=http://ocr-granite-docling:8135/layout-parsing
+      - PIPELINE_AYA_VISION_URL=http://ocr-aya-vision:8136/layout-parsing
+      - PIPELINE_DOLPHIN_URL=http://ocr-dolphin:8137/layout-parsing
+      - PIPELINE_QWEN3_OMNI_URL=http://ocr-qwen3-omni:8138/layout-parsing
+      - PIPELINE_OWLOCR_URL=http://ocr-owlocr:8139/layout-parsing
+      - PIPELINE_OCR_FLUX_URL=http://ocr-ocr-flux:8140/layout-parsing
+      - PIPELINE_MONKEY_OCR_URL=http://ocr-monkey-ocr:8141/layout-parsing
+      - PIPELINE_NUMARKDOWN_URL=http://ocr-numarkdown:8142/layout-parsing
+      - PIPELINE_OCR_DOCKER_URL=http://ocr-ocr-docker:8143/layout-parsing
+      - PIPELINE_GEMMA3_URL=http://ocr-gemma3:8144/layout-parsing
+      - PIPELINE_FALCON_OCR_URL=http://ocr-falcon-ocr:8145/layout-parsing
+      - PIPELINE_DOLPHIN_V2_URL=http://ocr-dolphin-v2:8146/layout-parsing
+      - PIPELINE_YOUTU_VL_URL=http://ocr-youtu-vl:8147/layout-parsing
+      - PIPELINE_PIKE_PDF_URL=http://ocr-pike-pdf:8148/layout-parsing
+      - PIPELINE_OPENPAGE_URL=http://ocr-openpage:8149/layout-parsing
+      - PIPELINE_DOCUMAGNET_URL=http://ocr-documagnet:8150/layout-parsing
+      - PIPELINE_HUNYUAN_OCR_URL=http://ocr-hunyuan-ocr:8151/layout-parsing
+      - PIPELINE_COLPALI_URL=http://ocr-colpali:8152/layout-parsing
+      - PIPELINE_PIXL_PASSPORT_URL=http://ocr-pixl-passport:8153/layout-parsing
+      - PIPELINE_NEMOTRON_NANO_URL=http://ocr-nemotron-nano:8154/layout-parsing
+      - PIPELINE_NEMOTRON_3_SUPER_URL=http://ocr-nemotron-3-super:8155/layout-parsing
+      - PIPELINE_NEMOTRON_3_ULTRA_URL=http://ocr-nemotron-3-ultra:8156/layout-parsing
+      - PIPELINE_NEMOTRON_OMNI_URL=http://ocr-nemotron-omni:8157/layout-parsing
+      - PIPELINE_MINICPM_V_4_6_URL=http://ocr-minicpm-v-4-6:8158/layout-parsing
+      - PIPELINE_DEEPSEEK_V4_URL=http://ocr-deepseek-v4:8159/layout-parsing
+      - PIPELINE_PADDLE_VL_1_5_URL=http://ocr-paddle-vl-1-5:8160/layout-parsing
     depends_on:
       - db
       - pipeline-paddleocr
@@ -352,6 +382,402 @@ services:
     volumes:
       - hf_cache:/root/.cache/huggingface
       - ./ocr-engines/mineru-diffusion:/app/mineru-diffusion
+
+  # --- Engine 14: Light On OCR Original ---
+  ocr-lightonocr-original:
+    <<: *vllm-base
+    container_name: ocr-engine-lightonocr-original
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8131
+      - ENGINE_NAME=Light On OCR Original
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 15: Doc OWL ---
+  ocr-docowl:
+    <<: *vllm-base
+    container_name: ocr-engine-docowl
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8132
+      - ENGINE_NAME=Doc OWL
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 16: Phi 4 OCR ---
+  ocr-phi4-ocr:
+    <<: *vllm-base
+    container_name: ocr-engine-phi4-ocr
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8133
+      - ENGINE_NAME=Phi 4 OCR
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 17: Smol Docling OCR ---
+  ocr-smol-docling:
+    <<: *vllm-base
+    container_name: ocr-engine-smol-docling
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8134
+      - ENGINE_NAME=Smol Docling OCR
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 18: IBM Granite Docling ---
+  ocr-granite-docling:
+    <<: *vllm-base
+    container_name: ocr-engine-granite-docling
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8135
+      - ENGINE_NAME=IBM Granite Docling
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 19: Aya Vision OCR ---
+  ocr-aya-vision:
+    <<: *vllm-base
+    container_name: ocr-engine-aya-vision
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8136
+      - ENGINE_NAME=Aya Vision OCR
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 20: Dolphin ---
+  ocr-dolphin:
+    <<: *vllm-base
+    container_name: ocr-engine-dolphin
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8137
+      - ENGINE_NAME=Dolphin
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 21: Qwen3-Omni ---
+  ocr-qwen3-omni:
+    <<: *vllm-base
+    container_name: ocr-engine-qwen3-omni
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8138
+      - ENGINE_NAME=Qwen3-Omni
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 22: owlOCR ---
+  ocr-owlocr:
+    <<: *vllm-base
+    container_name: ocr-engine-owlocr
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8139
+      - ENGINE_NAME=owlOCR
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 23: OCR Flux ---
+  ocr-ocr-flux:
+    <<: *vllm-base
+    container_name: ocr-engine-ocr-flux
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8140
+      - ENGINE_NAME=OCR Flux
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 24: Monkey OCR ---
+  ocr-monkey-ocr:
+    <<: *vllm-base
+    container_name: ocr-engine-monkey-ocr
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8141
+      - ENGINE_NAME=Monkey OCR
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 25: Numarkdown OCR ---
+  ocr-numarkdown:
+    <<: *vllm-base
+    container_name: ocr-engine-numarkdown
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8142
+      - ENGINE_NAME=Numarkdown OCR
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 26: OCR Docker ---
+  ocr-ocr-docker:
+    <<: *vllm-base
+    container_name: ocr-engine-ocr-docker
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8143
+      - ENGINE_NAME=OCR Docker
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 27: Gemma 3 OCR ---
+  ocr-gemma3:
+    <<: *vllm-base
+    container_name: ocr-engine-gemma3
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8144
+      - ENGINE_NAME=Gemma 3 OCR
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 28: Falcon OCR ---
+  ocr-falcon-ocr:
+    <<: *vllm-base
+    container_name: ocr-engine-falcon-ocr
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8145
+      - ENGINE_NAME=Falcon OCR
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 29: Dolphin v2 ---
+  ocr-dolphin-v2:
+    <<: *vllm-base
+    container_name: ocr-engine-dolphin-v2
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8146
+      - ENGINE_NAME=Dolphin v2
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 30: Youtu-VL ---
+  ocr-youtu-vl:
+    <<: *vllm-base
+    container_name: ocr-engine-youtu-vl
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8147
+      - ENGINE_NAME=Youtu-VL
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 31: Pike PDF ---
+  ocr-pike-pdf:
+    <<: *vllm-base
+    container_name: ocr-engine-pike-pdf
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8148
+      - ENGINE_NAME=Pike PDF
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 32: OpenPage ---
+  ocr-openpage:
+    <<: *vllm-base
+    container_name: ocr-engine-openpage
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8149
+      - ENGINE_NAME=OpenPage
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 33: DocuMagnet ---
+  ocr-documagnet:
+    <<: *vllm-base
+    container_name: ocr-engine-documagnet
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8150
+      - ENGINE_NAME=DocuMagnet
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 34: Hunyuan OCR ---
+  ocr-hunyuan-ocr:
+    <<: *vllm-base
+    container_name: ocr-engine-hunyuan-ocr
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8151
+      - ENGINE_NAME=Hunyuan OCR
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 35: ColPali ---
+  ocr-colpali:
+    <<: *vllm-base
+    container_name: ocr-engine-colpali
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8152
+      - ENGINE_NAME=ColPali
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 36: Pixl (Passport OCR) ---
+  ocr-pixl-passport:
+    <<: *vllm-base
+    container_name: ocr-engine-pixl-passport
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8153
+      - ENGINE_NAME=Pixl (Passport OCR)
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 37: NVIDIA Nemotron Nano ---
+  ocr-nemotron-nano:
+    <<: *vllm-base
+    container_name: ocr-engine-nemotron-nano
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8154
+      - ENGINE_NAME=NVIDIA Nemotron Nano
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 38: NVIDIA Nemotron 3 Super ---
+  ocr-nemotron-3-super:
+    <<: *vllm-base
+    container_name: ocr-engine-nemotron-3-super
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8155
+      - ENGINE_NAME=NVIDIA Nemotron 3 Super
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 39: NVIDIA Nemotron 3 Ultra ---
+  ocr-nemotron-3-ultra:
+    <<: *vllm-base
+    container_name: ocr-engine-nemotron-3-ultra
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8156
+      - ENGINE_NAME=NVIDIA Nemotron 3 Ultra
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 40: NVIDIA Nemotron Omni ---
+  ocr-nemotron-omni:
+    <<: *vllm-base
+    container_name: ocr-engine-nemotron-omni
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8157
+      - ENGINE_NAME=NVIDIA Nemotron Omni
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 41: MiniCPM-V 4.6 ---
+  ocr-minicpm-v-4-6:
+    <<: *vllm-base
+    container_name: ocr-engine-minicpm-v-4-6
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8158
+      - ENGINE_NAME=MiniCPM-V 4.6
+      - DOWNLOAD_MODEL=openbmb/MiniCPM-V-4_6
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 42: DeepSeek V4 OCR ---
+  ocr-deepseek-v4:
+    <<: *vllm-base
+    container_name: ocr-engine-deepseek-v4
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8159
+      - ENGINE_NAME=DeepSeek V4 OCR
+      - DOWNLOAD_MODEL=deepseek-ai/DeepSeek-V4-Flash
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+  # --- Engine 43: PaddleOCR-VL-1.5 ---
+  ocr-paddle-vl-1-5:
+    <<: *vllm-base
+    container_name: ocr-engine-paddle-vl-1-5
+    command: ["./generic-ocr-engine/serve.sh"]
+    environment:
+      - GENAI_HOST=0.0.0.0
+      - GENAI_PORT=8160
+      - ENGINE_NAME=PaddleOCR-VL-1.5
+      - DOWNLOAD_MODEL=PaddlePaddle/PaddleOCR-VL-1.5
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ./ocr-engines/generic-ocr-engine:/app/generic-ocr-engine
+
+
+
 
 volumes:
   hf_cache:

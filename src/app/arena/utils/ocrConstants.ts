@@ -6,17 +6,7 @@ export interface EngineResult {
 }
 
 export interface ResultsMap {
-  nemotron: EngineResult;
-  paddle: EngineResult;
-  lightonocr: EngineResult;
-  glm: EngineResult;
-  dots: EngineResult;
-  deepseek: EngineResult;
-  chandra: EngineResult;
-  gemma4: EngineResult;
-  qwen3vl: EngineResult;
-  litparse: EngineResult;
-  "mineru-diffusion": EngineResult;
+  [key: string]: EngineResult;
 }
 
 export const SAMPLE_FILES = [
@@ -45,7 +35,37 @@ export const engines = [
   { id: "gemma4", name: "Gemma 4", logo: "💎" },
   { id: "qwen3vl", name: "Qwen3-VL", logo: "🎈" },
   { id: "litparse", name: "LiteParse", logo: "📄" },
-  { id: "mineru-diffusion", name: "MinerU-Diffusion", logo: "⚒️" }
+  { id: "mineru-diffusion", name: "MinerU-Diffusion", logo: "⚒️" },
+  { id: "lightonocr-original", name: "Light On OCR Original", logo: "💡" },
+  { id: "docowl", name: "Doc OWL", logo: "🦉" },
+  { id: "phi4-ocr", name: "Phi 4 OCR", logo: "🎛️" },
+  { id: "smol-docling", name: "Smol Docling OCR", logo: "🦦" },
+  { id: "granite-docling", name: "IBM Granite Docling", logo: "🪨" },
+  { id: "aya-vision", name: "Aya Vision OCR", logo: "🌸" },
+  { id: "dolphin", name: "Dolphin", logo: "🐬" },
+  { id: "qwen3-omni", name: "Qwen3-Omni", logo: "🪐" },
+  { id: "owlocr", name: "owlOCR", logo: "👀" },
+  { id: "ocr-flux", name: "OCR Flux", logo: "🌊" },
+  { id: "monkey-ocr", name: "Monkey OCR", logo: "🐒" },
+  { id: "numarkdown", name: "Numarkdown OCR", logo: "🔢" },
+  { id: "ocr-docker", name: "OCR Docker", logo: "🐳" },
+  { id: "gemma3", name: "Gemma 3 OCR", logo: "💎" },
+  { id: "falcon-ocr", name: "Falcon OCR", logo: "🦅" },
+  { id: "dolphin-v2", name: "Dolphin v2", logo: "🐬" },
+  { id: "youtu-vl", name: "Youtu-VL", logo: "📹" },
+  { id: "pike-pdf", name: "Pike PDF", logo: "🐟" },
+  { id: "openpage", name: "OpenPage", logo: "📖" },
+  { id: "documagnet", name: "DocuMagnet", logo: "🧲" },
+  { id: "hunyuan-ocr", name: "Hunyuan OCR", logo: "🐉" },
+  { id: "colpali", name: "ColPali", logo: "📚" },
+  { id: "pixl-passport", name: "Pixl (Passport OCR)", logo: "🛂" },
+  { id: "nemotron-nano", name: "NVIDIA Nemotron Nano", logo: "🟢" },
+  { id: "nemotron-3-super", name: "NVIDIA Nemotron 3 Super", logo: "🟢" },
+  { id: "nemotron-3-ultra", name: "NVIDIA Nemotron 3 Ultra", logo: "🟢" },
+  { id: "nemotron-omni", name: "NVIDIA Nemotron Omni", logo: "🟢" },
+  { id: "minicpm-v-4-6", name: "MiniCPM-V 4.6", logo: "📸" },
+  { id: "deepseek-v4", name: "DeepSeek V4 OCR", logo: "🐳" },
+  { id: "paddle-vl-1-5", name: "PaddleOCR-VL-1.5", logo: "🏓" }
 ] as const;
 
 export type EngineId = typeof engines[number]["id"];
@@ -76,7 +96,37 @@ export const ENGINE_COLORS: Record<string, string> = {
   gemma4: "#ef4444",
   qwen3vl: "#ec4899",
   litparse: "#14b8a6",
-  "mineru-diffusion": "#6366f1"
+  "mineru-diffusion": "#6366f1",
+  "lightonocr-original": "#a78bfa",
+  docowl: "#c084fc",
+  "phi4-ocr": "#3b82f6",
+  "smol-docling": "#10b981",
+  "granite-docling": "#64748b",
+  "aya-vision": "#ec4899",
+  dolphin: "#06b6d4",
+  "qwen3-omni": "#f59e0b",
+  owlocr: "#14b8a6",
+  "ocr-flux": "#ef4444",
+  "monkey-ocr": "#f97316",
+  numarkdown: "#8b5cf6",
+  "ocr-docker": "#0284c7",
+  gemma3: "#ef4444",
+  "falcon-ocr": "#eab308",
+  "dolphin-v2": "#06b6d4",
+  "youtu-vl": "#e11d48",
+  "pike-pdf": "#0ea5e9",
+  openpage: "#10b981",
+  documagnet: "#f43f5e",
+  "hunyuan-ocr": "#8b5cf6",
+  colpali: "#6366f1",
+  "pixl-passport": "#f59e0b",
+  "nemotron-nano": "#10b981",
+  "nemotron-3-super": "#059669",
+  "nemotron-3-ultra": "#047857",
+  "nemotron-omni": "#065f46",
+  "minicpm-v-4-6": "#c2410c",
+  "deepseek-v4": "#0891b2",
+  "paddle-vl-1-5": "#ea580c"
 };
 
 export const ENGINE_DEFAULT_COLOR = "#64748b";
@@ -92,7 +142,37 @@ export const ENGINE_PRICING: Record<string, number> = {
   gemma4: 1.80,
   qwen3vl: 0.90,
   litparse: 0.40,
-  "mineru-diffusion": 1.60
+  "mineru-diffusion": 1.60,
+  "lightonocr-original": 0.25,
+  docowl: 1.10,
+  "phi4-ocr": 1.30,
+  "smol-docling": 0.15,
+  "granite-docling": 0.12,
+  "aya-vision": 1.40,
+  dolphin: 1.25,
+  "qwen3-omni": 1.70,
+  owlocr: 0.95,
+  "ocr-flux": 2.50,
+  "monkey-ocr": 0.70,
+  numarkdown: 1.85,
+  "ocr-docker": 0.35,
+  gemma3: 1.60,
+  "falcon-ocr": 1.35,
+  "dolphin-v2": 1.25,
+  "youtu-vl": 1.45,
+  "pike-pdf": 0.05,
+  openpage: 0.20,
+  documagnet: 0.50,
+  "hunyuan-ocr": 2.10,
+  colpali: 1.10,
+  "pixl-passport": 0.65,
+  "nemotron-nano": 0.50,
+  "nemotron-3-super": 0.80,
+  "nemotron-3-ultra": 1.50,
+  "nemotron-omni": 2.20,
+  "minicpm-v-4-6": 1.80,
+  "deepseek-v4": 1.20,
+  "paddle-vl-1-5": 0.15
 };
 
 export interface DiffPart {

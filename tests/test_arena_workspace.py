@@ -32,7 +32,7 @@ async def run_workspace_tests():
         
         # Step 3: Wait for OCR to complete
         print("Waiting for OCR processing to complete...")
-        await page.wait_for_selector("button:has-text('Run analysis')", timeout=90000)
+        await page.wait_for_selector("button:has-text('Run analysis')", timeout=180000)
         await page.wait_for_timeout(2000)
         
         print("Taking screenshot 03-step3-default-results.jpg...")

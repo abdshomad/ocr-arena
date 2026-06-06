@@ -100,7 +100,11 @@ export async function POST(req: NextRequest) {
 
     // Post to the selected Pipeline API engine
     let pipelineUrl = process.env.PIPELINE_PADDLEOCR_URL || process.env.PIPELINE_URL || "http://ocr-pipeline-paddleocr:8090/layout-parsing";
-    if (engine === "nemotron") {
+    
+    const envUrlKey = `PIPELINE_${engine.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_URL`;
+    if (process.env[envUrlKey]) {
+      pipelineUrl = process.env[envUrlKey]!;
+    } else if (engine === "nemotron") {
       pipelineUrl = process.env.PIPELINE_NEMOTRON_URL || "http://ocr-pipeline-nemotron:8091/layout-parsing";
     } else if (engine === "llama3-vision") {
       pipelineUrl = process.env.PIPELINE_LLAMA3_VISION_URL || "http://ocr-pipeline-llama3-vision:8092/layout-parsing";

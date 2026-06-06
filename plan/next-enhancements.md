@@ -52,6 +52,18 @@ This document lists all remaining pending enhancement tasks for the OCR Arena ap
   - **Objective**: Provide a split/grid view option that renders two different pages of a multi-page PDF side-by-side (or same page from different engine perspectives) with synchronized zooming/panning.
   - **Verification**: Activating "Page Compare Mode" allows selecting different page numbers for the left/right viewer frames and synchronously zooms both.
 
+- [PENDING] **Task 36**: Side-by-Side Synced Bounding Box Zoom & Scroll Mode
+  - **Objective**: Enable synchronized zooming and scrolling on document canvas visualizations across multiple side-by-side tabs or panels so that inspecting specific regions matches coordinates perfectly across models.
+  - **Verification**: Zooming/scrolling in the active overlay canvas applies identical zoom factors and scroll offsets to other models' canvas viewers.
+
+- [PENDING] **Task 37**: Interactive Markdown Diff Overlay and Segment Mapping
+  - **Objective**: Add a "Highlight Discrepancies" toggle in the Compare Workspace. When active, it computes inline word/character diffs between two selected OCR cards and visually overlays highlights on the document canvas segments where they differ.
+  - **Verification**: Activating the toggle highlights mismatched words in yellow in the side-by-side text cards and maps them back to red-outlined bounding boxes on the canvas.
+
+- [PENDING] **Task 38**: Regional Batch Re-OCR and Export
+  - **Objective**: Enable user to select multiple custom regions on the original document, run OCR sequentially or in parallel for only those selected regions across all models, and export a combined csv/markdown table of the results.
+  - **Verification**: Selecting three regions, clicking "Batch Analyze Regions", generates a localized matrix of parsed texts and downloads it as a CSV.
+
 
 ### Section 2: Scan History
 
@@ -103,6 +115,18 @@ This document lists all remaining pending enhancement tasks for the OCR Arena ap
   - **Objective**: Implement automatic detection of scans performed on identical or highly similar images (using file hashing or visual similarity), offering an option to collapse duplicates into a single run history node.
   - **Verification**: Performing multiple scans of the same file shows them grouped under a single parent entry in the history list, with an expandable history of versions.
 
+- [PENDING] **Task 39**: Automated Historical Run Compression & Storage Archiver
+  - **Objective**: Create an automated run cleanup and archiving interface in Scan History settings. This allows purging runs older than X days or archiving large image attachments to disk, preserving metadata and parsed text in the database.
+  - **Verification**: Configuring archival threshold to 30 days compresses and archives matching records, showing an archived label next to their entries in the table.
+
+- [PENDING] **Task 40**: Shared History Session Collaboration Links
+  - **Objective**: Allow users to generate a shareable URL containing a query string of specific historical runs. Opening the link loads the exact same comparison workspace configuration and files for other users.
+  - **Verification**: Clicking "Share Comparison" copies a link to the clipboard that reproduces the visual overlay and model tabs when visited in another browser session.
+
+- [PENDING] **Task 41**: History Schema Export and Database Backup Panel
+  - **Objective**: Add a utility section in the history sidebar to perform standard database backups, exporting the complete schema, metadata, and history runs as a SQL dump or structured JSON package.
+  - **Verification**: Triggering DB export saves a backup file locally that can be used to restore history.
+
 
 ### Section 3: Telemetry & Analytics
 
@@ -153,3 +177,15 @@ This document lists all remaining pending enhancement tasks for the OCR Arena ap
 - [PENDING] **Task 35**: Engine Cost Projection & Budget Allocation Simulator
   - **Objective**: Create an interactive simulator in the Telemetry tab where users can input expected monthly document volume and average document sizes to project total monthly cost across different engine combinations.
   - **Verification**: Adjusting the monthly document volume slider recalculates and displays the cost projections side-by-side for each engine model, recommending the most cost-efficient configuration.
+
+- [PENDING] **Task 42**: OCR Cost Projection & Model Combination Optimizer
+  - **Objective**: Build an automated recommender system that analyzes historical telemetry data and user SLA constraints, proposing the most cost-efficient and accurate hybrid combinations of models (e.g. use PaddleOCR for simple documents, fallback to Nemotron Omni for complex ones).
+  - **Verification**: Accessing the recommendations panel shows a projected monthly cost comparison and accuracy chart for the recommended hybrid setup.
+
+- [PENDING] **Task 43**: Model Drift Alert Notification Center
+  - **Objective**: Implement email or webhook notification settings in Telemetry for server administrators. When an OCR engine's error rate or average latency spikes beyond a threshold, an alert notification is dispatched.
+  - **Verification**: Triggering a simulated latency increase on a test model triggers a notification event and logs the breach in the alert history log.
+
+- [PENDING] **Task 44**: Custom SLA Metrics Dashboard & PDF Telemetry Exporter
+  - **Objective**: Design a comprehensive SLA dashboard allowing custom threshold configurations per document category. Provide a "Download PDF Executive Summary" button to generate a styled PDF summary of uptime, latency percentiles, and costs.
+  - **Verification**: Clicking the export button generates a styled PDF report showing all telemetry charts and SLA compliance ratings.
