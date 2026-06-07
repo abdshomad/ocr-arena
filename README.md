@@ -2,6 +2,8 @@
 
 A modern Next.js web application providing a high-performance **OCR Arena** user interface for processing documents, comparing multi-engine OCR outputs, analyzing layout visualizations, and checking historical telemetry.
 
+![OCR Arena Battle](screenshots/ocr-arena-battle.png)
+
 ![OCR Arena Compare Workspace](screenshots/03-step3-default-results.jpg)
 
 ---

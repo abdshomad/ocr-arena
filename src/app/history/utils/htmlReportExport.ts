@@ -1,4 +1,4 @@
-import { DocumentHistoryItem, formatBytes, getDocType, getVendor, escapeHtml } from "./historyHelpers";
+import { DocumentHistoryItem, formatBytes, escapeHtml, ENGINES } from "./historyHelpers";
 import { reportStyles } from "./htmlReportStyles";
 
 export function handleExportHTMLReport(selectedItems: string[], historyList: DocumentHistoryItem[]) {
@@ -44,9 +44,6 @@ export function handleExportHTMLReport(selectedItems: string[], historyList: Doc
     const cleanName = filename.length > 13 ? filename.substring(13) : filename;
     const firstRun = runs[0];
     const fileSizeStr = formatBytes(firstRun.size);
-    const docType = getDocType(firstRun);
-    const vendor = getVendor(firstRun);
-    const currency = firstRun.metadata?.currency || firstRun.metadata?.Currency || "N/A";
     const tags: string[] = firstRun.metadata?.tags || firstRun.metadata?.Tags || [];
 
     htmlContent += `
@@ -57,9 +54,6 @@ export function handleExportHTMLReport(selectedItems: string[], historyList: Doc
           <h2 class="document-title">${cleanName}</h2>
           <div class="document-meta">
             <span>Size: <strong>${fileSizeStr}</strong></span>
-            <span>Type: <strong>${docType}</strong></span>
-            <span>Vendor: <strong>${vendor}</strong></span>
-            <span>Currency: <strong>${currency}</strong></span>
             <span>Uploaded: <strong>${new Date(firstRun.uploadTime).toLocaleString()}</strong></span>
           </div>
           ${tags.length > 0 ? `
@@ -95,17 +89,24 @@ export function handleExportHTMLReport(selectedItems: string[], historyList: Doc
       const text = run.ocrText || "";
       const wordCount = text.split(/\s+/).filter(Boolean).length;
       
-      if (run.engine === "paddleocr") costStr = "$0.0000";
+      if (run.engine === "paddleocr" || run.engine === "paddle") costStr = "$0.0000";
       else if (run.engine === "nemotron") costStr = "$0.0015";
-      else if (run.engine === "deepseek-ocr-2") costStr = "$0.0020";
-      else if (run.engine === "lighton-ocr-2-1b") costStr = "$0.0010";
-      else if (run.engine === "dots-ocr") costStr = "$0.0025";
-      else if (run.engine === "glm-ocr") costStr = "$0.0018";
+      else if (run.engine === "deepseek-ocr-2" || run.engine === "deepseek") costStr = "$0.0020";
+      else if (run.engine === "lighton-ocr-2-1b" || run.engine === "lightonocr") costStr = "$0.0010";
+      else if (run.engine === "dots-ocr" || run.engine === "dots") costStr = "$0.0025";
+      else if (run.engine === "glm-ocr" || run.engine === "glm") costStr = "$0.0018";
       else if (run.engine === "llama3-vision") costStr = "$0.0030";
+      else if (run.engine === "chandra") costStr = "$0.0012";
+      else if (run.engine === "gemma4") costStr = "$0.0018";
+      else if (run.engine === "qwen3vl") costStr = "$0.0009";
+      else if (run.engine === "litparse") costStr = "$0.0004";
+      else if (run.engine === "mineru-diffusion") costStr = "$0.0016";
+
+      const engineDisplayName = ENGINES.find(e => e.id === run.engine)?.name || run.engine;
 
       htmlContent += `
             <tr>
-              <td style="font-weight: 700; color: #f1f5f9;">${run.engine}</td>
+              <td style="font-weight: 700; color: #f1f5f9;">${engineDisplayName}</td>
               <td>${statusBadge}</td>
               <td style="font-family: monospace;">${latencyStr}</td>
               <td style="font-family: monospace;">${costStr}</td>

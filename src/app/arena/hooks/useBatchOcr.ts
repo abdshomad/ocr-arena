@@ -94,7 +94,7 @@ export function useBatchOcr(
                 const res = await fetch("/api/arena", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ engine: engine.id, image: `/arena/${filename}` })
+                  body: JSON.stringify({ engine: engine.id, image: `/arena/${filename}`, filename })
                 });
 
                 if (state.batchStatusRef.current === "cancelled") break;

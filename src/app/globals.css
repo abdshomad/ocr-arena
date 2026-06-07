@@ -73,3 +73,14 @@ body {
   background: var(--fluent-surface);
   border: 1px solid var(--fluent-border);
 }
+
+select {
+  background-color: var(--fluent-surface);
+  color: var(--fluent-text);
+}
+
+option {
+  background-color: var(--fluent-surface);
+  color: var(--fluent-text);
+}
+

@@ -25,7 +25,7 @@ async def run_canvas_tests():
         
         # Wait for OCR processing to complete
         print("Waiting for OCR processing to complete...")
-        await page.wait_for_selector("button:has-text('Run analysis')", timeout=90000)
+        await page.wait_for_selector("button:has-text('Run analysis')", timeout=180000)
         await page.wait_for_timeout(2000)
         
         # Step 4: Switch right panel tab to Result

@@ -44,6 +44,7 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
     cardWordWrap,
     setCardWordWrap,
     results,
+    selectedFilename,
     selectedPageIndex,
     visibleLabels,
     visibleEngines,
@@ -62,7 +63,6 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
     activeExportDropdown,
     setActiveExportDropdown,
     gridCols,
-    selectedFilename,
     hoveredBlock,
     setHoveredBlock
   } = state;
@@ -141,6 +141,7 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
 
           {rightPanelTab === "arena" && (
             <ArenaTab
+              selectedFilename={selectedFilename}
               visibleEngines={visibleEngines}
               results={results}
               selectedPageIndex={selectedPageIndex}

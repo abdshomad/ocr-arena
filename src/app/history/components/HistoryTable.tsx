@@ -18,7 +18,6 @@ interface HistoryTableProps {
   isRegexSearch: boolean;
   setPreviewItem: (item: DocumentHistoryItem | null) => void;
   handleDelete: (filename: string) => void;
-  handleOpenInlineEdit: (item: DocumentHistoryItem) => void;
   sortColumns: { id: string; desc: boolean }[];
   handleSort: (columnId: string, event: React.MouseEvent) => void;
 }

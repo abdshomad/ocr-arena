@@ -98,8 +98,26 @@ export const HistoryMobileTable: React.FC<HistoryMobileTableProps> = ({
                     File Size: <span className="text-slate-800 dark:text-slate-350">{formatBytes(item.size)}</span>
                   </div>
 
-                  <div className="text-[10px] text-slate-550 font-medium">
-                    OCR Engine: <span className="text-slate-800 dark:text-slate-200 font-bold bg-slate-105 dark:bg-slate-950 px-2 py-0.5 rounded border border-slate-200/50 dark:border-slate-800/50">{highlightText(getEngineDisplay(item.engine), searchQuery, isRegexSearch)}</span>
+                  <div className="text-[10px] text-slate-550 font-medium flex flex-wrap items-center gap-1.5">
+                    OCR Engine: <span className="text-slate-800 dark:text-slate-200 font-bold bg-slate-105 dark:bg-slate-955 px-2 py-0.5 rounded border border-slate-200/50 dark:border-slate-800/50">{highlightText(getEngineDisplay(item.engine), searchQuery, isRegexSearch)}</span>
+                    {(item.isAccurate !== null && item.isAccurate !== undefined ||
+                      item.isLoved !== null && item.isLoved !== undefined ||
+                      item.ratingStars !== null && item.ratingStars !== undefined ||
+                      item.isFast !== null && item.isFast !== undefined ||
+                      item.ocrRemarks) && (
+                      <span className="flex items-center gap-1 bg-slate-105 dark:bg-slate-955 px-1.5 py-0.5 rounded border border-slate-200/50 dark:border-slate-800/50 text-[9px] select-none text-slate-400">
+                        {item.isAccurate === true && <span title="Accurate" className="text-emerald-500">👍</span>}
+                        {item.isAccurate === false && <span title="Not Accurate" className="text-rose-500">👎</span>}
+                        {item.ratingStars !== null && item.ratingStars !== undefined && item.ratingStars > 0 && (
+                           <span className="text-amber-500 font-semibold">★{item.ratingStars}</span>
+                        )}
+                        {item.isLoved === true && <span title="Loved" className="text-rose-500">♥</span>}
+                        {item.isLoved === false && <span title="Hated" className="text-slate-400">💔</span>}
+                        {item.isFast === true && <span title="Fast" className="text-amber-500">⚡</span>}
+                        {item.isFast === false && <span title="Slow" className="text-slate-400 text-[30px] inline-block align-middle leading-none">🐌</span>}
+                        {item.ocrRemarks && <span title={item.ocrRemarks} className="text-slate-405">💬</span>}
+                      </span>
+                    )}
                   </div>
 
                   {Array.isArray(item.metadata?.tags || item.metadata?.Tags) && (item.metadata?.tags || item.metadata?.Tags).length > 0 && (
@@ -123,7 +141,10 @@ export const HistoryMobileTable: React.FC<HistoryMobileTableProps> = ({
                         {item.parsed ? "parsed" : "failed"}
                       </span>
                       {item.latency !== undefined && item.latency !== null && (
-                        <span className="text-[10px] text-slate-405 dark:text-slate-500 font-mono">
+                        <span
+                          className="text-[10px] text-slate-405 dark:text-slate-500 font-mono cursor-help border-b border-dashed border-slate-300 dark:border-slate-700 pb-0.5"
+                          title={`OCR Run Details:\nStart: ${item.ocrStartTime ? formatDate(item.ocrStartTime) : "N/A"}\nEnd: ${item.ocrEndTime ? formatDate(item.ocrEndTime) : "N/A"}\nElapsed: ${(item.latency / 1000).toFixed(2)}s`}
+                        >
                           ⏱️ {(item.latency / 1000).toFixed(2)}s
                         </span>
                       )}

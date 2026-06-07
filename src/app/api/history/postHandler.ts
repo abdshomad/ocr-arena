@@ -5,6 +5,33 @@ import path from "path";
 export async function handlePostHistory(req: NextRequest) {
   try {
     const body = await req.json();
+
+    // Check for feedback rating operation
+    if (body.action === "feedback") {
+      const { filename, engine, isAccurate, isLoved, ratingStars, ocrRemarks, isFast } = body;
+      if (!filename || !engine) {
+        return NextResponse.json({ error: "Filename and engine are required" }, { status: 400 });
+      }
+      const safeFile = path.basename(filename);
+      const updateRes = await query(
+        `UPDATE documents 
+         SET is_accurate = $1, is_loved = $2, rating_stars = $3, ocr_remarks = $4, is_fast = $5
+         WHERE filename = $6 AND engine = $7`,
+        [
+          isAccurate !== undefined ? isAccurate : null,
+          isLoved !== undefined ? isLoved : null,
+          ratingStars !== undefined ? ratingStars : null,
+          ocrRemarks !== undefined ? ocrRemarks : null,
+          isFast !== undefined ? isFast : null,
+          safeFile,
+          engine
+        ]
+      );
+      if (updateRes.rowCount && updateRes.rowCount > 0) {
+        return NextResponse.json({ success: true });
+      }
+      return NextResponse.json({ error: "Document not found" }, { status: 404 });
+    }
     
     // Check for restore operation
     if (body.action === "restore") {
@@ -40,38 +67,39 @@ export async function handlePostHistory(req: NextRequest) {
 
         const docId = insertDocRes.rows[0].id;
 
-        // Clean existing items
-        await query("DELETE FROM ocr_items WHERE document_id = $1", [docId]);
+        // Populate items, flagged, and remarks in the metadata object
+        const itemsList = [];
+        const flaggedObj: Record<number, boolean> = {};
+        const remarksObj: Record<number, string> = {};
 
-        // Insert restored items
         const items = doc.items || doc.ocr_items || doc.ocrItems;
         if (items && Array.isArray(items)) {
           for (const item of items) {
-            await query(`
-              INSERT INTO ocr_items (
-                document_id, row_index, 
-                kode_barang_original, kode_barang, 
-                nama_barang, 
-                banyak_original, banyak, 
-                jumlah_original, jumlah, 
-                is_flagged, remark
-              )
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            `, [
-              docId,
-              item.row_index !== undefined ? item.row_index : (item.rowIndex !== undefined ? item.rowIndex : 0),
-              item.kode_barang_original || item.kodeBarangOriginal || null,
-              item.kode_barang || item.kodeBarang || null,
-              item.nama_barang || item.namaBarang || null,
-              item.banyak_original || item.banyakOriginal || null,
-              item.banyak,
-              item.jumlah_original || item.jumlahOriginal || null,
-              item.jumlah,
-              item.is_flagged || item.isFlagged || false,
-              item.remark || ""
-            ]);
+            const idx = item.row_index !== undefined ? item.row_index : (item.rowIndex !== undefined ? item.rowIndex : 0);
+            itemsList.push({
+              kodeBarang: item.kodeBarang || item.kode_barang || item.kodeBarangOriginal || item.kode_barang_original || null,
+              namaBarang: item.namaBarang || item.nama_barang || null,
+              banyak: item.banyak,
+              jumlah: item.jumlah
+            });
+            if (item.is_flagged || item.isFlagged) {
+              flaggedObj[idx] = true;
+            }
+            if (item.remark) {
+              remarksObj[idx] = item.remark;
+            }
           }
         }
+
+        const metadata = doc.metadata || {};
+        metadata.items = itemsList;
+        metadata.flagged = flaggedObj;
+        metadata.remarks = remarksObj;
+
+        await query(
+          "UPDATE documents SET metadata = $1 WHERE id = $2",
+          [JSON.stringify(metadata), docId]
+        );
       }
       return NextResponse.json({ success: true, count: backupData.length });
     }

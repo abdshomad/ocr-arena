@@ -43,7 +43,7 @@ export const FieldsTab: React.FC<FieldsTabProps> = ({
           className="text-[11px] font-semibold text-[#0078d4] bg-transparent border border-[var(--fluent-border-strong)] rounded-sm px-2 py-0.5 cursor-pointer"
         >
           {engines.map((e) => (
-            <option key={e.id} value={e.id}>{e.name}</option>
+            <option key={e.id} value={e.id} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">{e.name}</option>
           ))}
         </select>
       </div>

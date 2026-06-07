@@ -37,7 +37,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ state }) => {
     isRightPanelExpanded,
     setIsRightPanelExpanded,
     rightPanelTab,
-    setRightPanelTab
+    setRightPanelTab,
+    showLayoutOverlay,
+    setShowLayoutOverlay
   } = state;
 
   return (
@@ -79,6 +81,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ state }) => {
             Visual layers
           </h4>
           <div className="space-y-2">
+            <label className="flex items-center gap-1.5 cursor-pointer p-1 rounded-sm hover:bg-[var(--fluent-bg)] text-[10px] text-[var(--fluent-text-secondary)]">
+              <input
+                type="checkbox"
+                checked={showLayoutOverlay}
+                onChange={(e) => setShowLayoutOverlay(e.target.checked)}
+                className="rounded text-[#0078d4] w-3 h-3"
+              />
+              <span className="font-semibold">Show Bounding Box Overlay</span>
+            </label>
+
             <div className="grid grid-cols-3 gap-0.5 border fluent-border rounded-sm p-0.5 bg-[var(--fluent-bg)]">
               {(["label", "confidence", "heatmap"] as const).map((mode) => (
                 <button

@@ -2,9 +2,8 @@
 import React from "react";
 import { 
   DocumentHistoryItem, 
-  getVendor, 
-  getDocType, 
-  getLocalDateString 
+  getLocalDateString,
+  ENGINES
 } from "../utils/historyHelpers";
 
 export function useHistoryFilters(state: any) {
@@ -18,24 +17,9 @@ export function useHistoryFilters(state: any) {
   }, [state.historyList]);
 
   const stats = React.useMemo(() => {
-    const vendors: Record<string, number> = {};
-    const docTypes: Record<string, number> = {};
-    const currencies: Record<string, number> = {};
     const tagsSet = new Set<string>();
 
     state.historyList.forEach((item: DocumentHistoryItem) => {
-      const v = getVendor(item);
-      vendors[v] = (vendors[v] || 0) + 1;
-
-      const t = getDocType(item);
-      docTypes[t] = (docTypes[t] || 0) + 1;
-
-      const c = item.metadata?.currency || item.metadata?.Currency || "";
-      const clean = String(c).trim();
-      if (clean && clean.toLowerCase() !== "not found" && clean.toLowerCase() !== "not_found") {
-        currencies[clean] = (currencies[clean] || 0) + 1;
-      }
-
       const tags = item.metadata?.tags || item.metadata?.Tags;
       if (Array.isArray(tags)) {
         tags.forEach(tag => {
@@ -44,7 +28,7 @@ export function useHistoryFilters(state: any) {
       }
     });
 
-    return { vendors, docTypes, currencies, tags: Array.from(tagsSet) };
+    return { tags: Array.from(tagsSet) };
   }, [state.historyList]);
 
   const isRegexValid = React.useMemo(() => {
@@ -72,18 +56,39 @@ export function useHistoryFilters(state: any) {
       }
 
       if (item.size > state.maxSizeFilter) return false;
-      if (state.selectedVendor !== "all" && getVendor(item) !== state.selectedVendor) return false;
-      if (state.selectedDocType !== "all" && getDocType(item) !== state.selectedDocType) return false;
-
-      if (state.selectedCurrency !== "all") {
-        const c = item.metadata?.currency || item.metadata?.Currency || "";
-        if (String(c).trim() !== state.selectedCurrency) return false;
-      }
 
       if (state.selectedTags.length > 0) {
         const itemTags: string[] = item.metadata?.tags || item.metadata?.Tags || [];
         const hasAll = state.selectedTags.every((t: string) => itemTags.includes(t));
         if (!hasAll) return false;
+      }
+
+      if (state.statusFilter && state.statusFilter !== "all") {
+        const wantsSuccess = state.statusFilter === "success";
+        if (item.parsed !== wantsSuccess) return false;
+      }
+
+      if (state.loveFilter && state.loveFilter !== "all") {
+        if (state.loveFilter === "loved" && item.isLoved !== true) return false;
+        if (state.loveFilter === "hated" && item.isLoved !== false) return false;
+        if (state.loveFilter === "neutral" && item.isLoved !== null && item.isLoved !== undefined) return false;
+      }
+
+      if (state.likeFilter && state.likeFilter !== "all") {
+        if (state.likeFilter === "liked" && item.isAccurate !== true) return false;
+        if (state.likeFilter === "disliked" && item.isAccurate !== false) return false;
+        if (state.likeFilter === "unrated" && item.isAccurate !== null && item.isAccurate !== undefined) return false;
+      }
+
+      if (state.starsFilter && state.starsFilter !== "all") {
+        const targetStars = Number(state.starsFilter);
+        if (item.ratingStars !== targetStars) return false;
+      }
+
+      if (state.fastFilter && state.fastFilter !== "all") {
+        if (state.fastFilter === "fast" && item.isFast !== true) return false;
+        if (state.fastFilter === "slow" && item.isFast !== false) return false;
+        if (state.fastFilter === "unrated" && item.isFast !== null && item.isFast !== undefined) return false;
       }
 
       if (!state.searchQuery) return true;
@@ -99,7 +104,8 @@ export function useHistoryFilters(state: any) {
 
       if (regex) {
         const fileMatch = regex.test(item.filename);
-        const engineMatch = item.engine ? regex.test(item.engine) : false;
+        const engineDisplay = ENGINES.find((e) => e.id === item.engine)?.name || item.engine || "";
+        const engineMatch = regex.test(engineDisplay);
         const textMatch = item.ocrText ? regex.test(item.ocrText) : false;
         
         let metaMatch = false;
@@ -112,7 +118,8 @@ export function useHistoryFilters(state: any) {
       } else {
         const q = state.searchQuery.toLowerCase();
         const fileMatch = item.filename.toLowerCase().includes(q);
-        const engineMatch = item.engine?.toLowerCase().includes(q) || false;
+        const engineDisplay = ENGINES.find((e) => e.id === item.engine)?.name.toLowerCase() || item.engine?.toLowerCase() || "";
+        const engineMatch = engineDisplay.includes(q);
         const textMatch = item.ocrText?.toLowerCase().includes(q) || false;
         
         let metaMatch = false;
@@ -130,12 +137,14 @@ export function useHistoryFilters(state: any) {
     state.startDate,
     state.endDate,
     state.maxSizeFilter,
-    state.selectedVendor,
-    state.selectedDocType,
-    state.selectedCurrency,
     state.selectedTags,
     state.searchQuery,
-    state.isRegexSearch
+    state.isRegexSearch,
+    state.statusFilter,
+    state.loveFilter,
+    state.likeFilter,
+    state.starsFilter,
+    state.fastFilter
   ]);
 
   const handleSort = (columnId: string, event: React.MouseEvent) => {
@@ -216,9 +225,6 @@ export function useHistoryFilters(state: any) {
 
   return {
     runsPerDay,
-    vendorCounts: stats.vendors,
-    docTypeCounts: stats.docTypes,
-    currencyCounts: stats.currencies,
     allTags: stats.tags,
     isRegexValid,
     filteredHistory,

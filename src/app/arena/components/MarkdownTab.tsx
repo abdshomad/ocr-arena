@@ -56,10 +56,10 @@ export const MarkdownTab: React.FC<MarkdownTabProps> = ({
           <select
             value={selectedOverlayEngine}
             onChange={(e) => setSelectedOverlayEngine(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs font-bold text-[#0078d4] cursor-pointer"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-bold text-[#0078d4] cursor-pointer"
           >
             {engines.map(e => (
-              <option key={e.id} value={e.id} className="bg-[#111625] text-slate-200">
+              <option key={e.id} value={e.id} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
                 {e.logo} {e.name}
               </option>
             ))}
@@ -73,27 +73,27 @@ export const MarkdownTab: React.FC<MarkdownTabProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Find text..."
-            className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs placeholder-slate-550 focus:outline-none focus:border-[#0078d4] w-28 text-slate-200"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs placeholder-slate-400 dark:placeholder-slate-550 focus:outline-none focus:border-[#0078d4] w-28 text-slate-800 dark:text-slate-200"
           />
           
           {/* Typography controls */}
           <select
             value={cardFontSizes[selectedOverlayEngine] || globalFontSize}
             onChange={(e) => setCardFontSizes(prev => ({ ...prev, [selectedOverlayEngine]: e.target.value as "sm" | "md" | "lg" }))}
-            className="bg-slate-950 border border-slate-800 rounded-lg px-1.5 py-1 text-[10px] font-bold text-[#0078d4] focus:outline-none cursor-pointer"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-1.5 py-1 text-[10px] font-bold text-[#0078d4] focus:outline-none cursor-pointer"
             title="Font Size"
           >
-            <option value="sm" className="bg-[#111625]">Aa-</option>
-            <option value="md" className="bg-[#111625]">Aa</option>
-            <option value="lg" className="bg-[#111625]">Aa+</option>
+            <option value="sm" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Aa-</option>
+            <option value="md" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Aa</option>
+            <option value="lg" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Aa+</option>
           </select>
 
           <button
             onClick={() => setCardWordWrap(prev => ({ ...prev, [selectedOverlayEngine]: !(prev[selectedOverlayEngine] !== undefined ? prev[selectedOverlayEngine] : globalWordWrap) }))}
-            className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
               (cardWordWrap[selectedOverlayEngine] !== undefined ? cardWordWrap[selectedOverlayEngine] : globalWordWrap)
                 ? "bg-[#0078d4]/10 text-[#0078d4] border-[#0078d4]/20"
-                : "bg-slate-955 text-slate-500 border-slate-800"
+                : "bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
             title="Toggle Wrap"
           >

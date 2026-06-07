@@ -5,6 +5,51 @@ import crypto from "crypto";
 import { query, cleanupAndReindexItems } from "../../../db";
 import { parseDOMetadata } from "../../../utils/parser";
 
+async function saveToDocuments({
+  filename,
+  mtime,
+  size,
+  parsed,
+  metadata,
+  layoutResult,
+  isSample,
+  fileHash,
+  engine,
+  ocrStartTime,
+  ocrEndTime,
+  ocrElapsedMs
+}: any) {
+  return query(`
+    INSERT INTO documents (filename, upload_time, size, parsed, metadata, layout_parsing_result, is_sample, file_hash, engine, ocr_start_time, ocr_end_time, ocr_elapsed_ms)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    ON CONFLICT (filename, engine) DO UPDATE
+    SET upload_time = EXCLUDED.upload_time,
+        size = EXCLUDED.size,
+        parsed = EXCLUDED.parsed,
+        metadata = EXCLUDED.metadata,
+        layout_parsing_result = EXCLUDED.layout_parsing_result,
+        is_sample = EXCLUDED.is_sample,
+        file_hash = EXCLUDED.file_hash,
+        ocr_start_time = EXCLUDED.ocr_start_time,
+        ocr_end_time = EXCLUDED.ocr_end_time,
+        ocr_elapsed_ms = EXCLUDED.ocr_elapsed_ms
+    RETURNING id
+  `, [
+    filename,
+    mtime || new Date(),
+    size,
+    parsed,
+    metadata ? JSON.stringify(metadata) : null,
+    layoutResult ? JSON.stringify(layoutResult) : null,
+    isSample,
+    fileHash,
+    engine || "paddleocr",
+    ocrStartTime,
+    ocrEndTime,
+    ocrElapsedMs
+  ]);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { filename, engine } = await req.json();
@@ -14,7 +59,6 @@ export async function POST(req: NextRequest) {
 
     const safeFile = path.basename(filename);
 
-    // 1. Resolve path to the public assets folder or fallback to /uploads
     let filePath = path.join(process.cwd(), "public", "arena", safeFile);
     let isUpload = false;
     let isSample = true;
@@ -28,13 +72,11 @@ export async function POST(req: NextRequest) {
       isSample = false;
     }
 
-    // Read file and compute content hash
     const fileBuffer = fs.readFileSync(filePath);
     const fileHash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
 
-    // 2. Check if document exists in database (by filename OR hash) and is already parsed for this engine
     const checkRes = await query(
-      "SELECT id, layout_parsing_result FROM documents WHERE (filename = $1 OR file_hash = $2) AND engine = $3 AND parsed = true AND layout_parsing_result IS NOT NULL",
+      "SELECT id, layout_parsing_result, is_accurate, is_loved, rating_stars, ocr_remarks, is_fast FROM documents WHERE (filename = $1 OR file_hash = $2) AND engine = $3 AND parsed = true AND layout_parsing_result IS NOT NULL",
       [safeFile, fileHash, engine || "paddleocr"]
     );
 
@@ -43,38 +85,21 @@ export async function POST(req: NextRequest) {
       const docId = doc.id;
       const pipelineResult = doc.layout_parsing_result;
 
-      // Clean up and re-index invalid items first
       await cleanupAndReindexItems(docId);
 
-      // Fetch items
-      const itemsRes = await query(
-        `SELECT row_index, 
-                kode_barang, nama_barang, banyak, jumlah, 
-                is_flagged, remark 
-         FROM ocr_items 
-         WHERE document_id = $1 
-         ORDER BY row_index`,
-        [docId]
-      );
+      const freshRes = await query("SELECT metadata FROM documents WHERE id = $1", [docId]);
+      const metadata = freshRes.rows[0]?.metadata || {};
 
-      const items = itemsRes.rows.map(row => ({
-        kodeBarang: row.kode_barang,
-        namaBarang: row.nama_barang,
-        banyak: row.banyak,
-        jumlah: row.jumlah
+      const rawItems = metadata.items || [];
+      const items = rawItems.map((item: any) => ({
+        kodeBarang: item.kodeBarang || item.kode_barang || "",
+        namaBarang: item.namaBarang || item.nama_barang || "",
+        banyak: item.banyak || "",
+        jumlah: item.jumlah || ""
       }));
 
-      const flagged: Record<number, boolean> = {};
-      const remarks: Record<number, string> = {};
-
-      itemsRes.rows.forEach(row => {
-        if (row.is_flagged) {
-          flagged[row.row_index] = true;
-        }
-        if (row.remark && row.remark.trim()) {
-          remarks[row.row_index] = row.remark;
-        }
-      });
+      const flagged = metadata.flagged || {};
+      const remarks = metadata.remarks || {};
 
       return NextResponse.json({
         errorCode: 0,
@@ -82,13 +107,16 @@ export async function POST(req: NextRequest) {
         result: pipelineResult,
         items,
         flagged,
-        remarks
+        remarks,
+        isAccurate: doc.is_accurate,
+        isLoved: doc.is_loved,
+        ratingStars: doc.rating_stars,
+        ocrRemarks: doc.ocr_remarks,
+        isFast: doc.is_fast
       });
     }
 
     const b64 = fileBuffer.toString("base64");
-
-    // Form payload
     const payload = {
       file: b64,
       matchHistoryJob: false,
@@ -98,7 +126,6 @@ export async function POST(req: NextRequest) {
       useDocOrientationClassify: false
     };
 
-    // Post to the selected Pipeline API engine
     let pipelineUrl = process.env.PIPELINE_PADDLEOCR_URL || process.env.PIPELINE_URL || "http://ocr-pipeline-paddleocr:8090/layout-parsing";
     if (engine === "nemotron") {
       pipelineUrl = process.env.PIPELINE_NEMOTRON_URL || "http://ocr-pipeline-nemotron:8091/layout-parsing";
@@ -117,87 +144,96 @@ export async function POST(req: NextRequest) {
     }
     
     console.log(`Forwarding request to pipeline API (${engine || "default"}): ${pipelineUrl}`);
-    const response = await fetch(pipelineUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
+    const ocrStartTime = new Date();
+    const startTimeMs = Date.now();
+
+    let response;
+    try {
+      response = await fetch(pipelineUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    } catch (err: any) {
+      const ocrEndTime = new Date();
+      const ocrElapsedMs = Date.now() - startTimeMs;
+      const stats = fs.statSync(filePath);
+      try {
+        await saveToDocuments({
+          filename: safeFile,
+          mtime: stats.mtime,
+          size: stats.size,
+          parsed: false,
+          metadata: null,
+          layoutResult: { error: err.message || "Failed to fetch pipeline" },
+          isSample,
+          fileHash,
+          engine,
+          ocrStartTime,
+          ocrEndTime,
+          ocrElapsedMs
+        });
+      } catch (dbErr) {
+        console.error("Database save failed during parse OCR fetch failure:", dbErr);
+      }
+      return NextResponse.json({ error: `Pipeline API fetch error: ${err.message}` }, { status: 500 });
+    }
+
+    const ocrEndTime = new Date();
+    const ocrElapsedMs = Date.now() - startTimeMs;
 
     if (!response.ok) {
       const errText = await response.text();
+      const stats = fs.statSync(filePath);
+      try {
+        await saveToDocuments({
+          filename: safeFile,
+          mtime: stats.mtime,
+          size: stats.size,
+          parsed: false,
+          metadata: null,
+          layoutResult: { error: errText },
+          isSample,
+          fileHash,
+          engine,
+          ocrStartTime,
+          ocrEndTime,
+          ocrElapsedMs
+        });
+      } catch (dbErr) {
+        console.error("Database save failed during parse OCR status failure:", dbErr);
+      }
       return NextResponse.json({ error: `Pipeline API error: ${errText}` }, { status: response.status });
     }
 
     const data = await response.json();
 
-    // If it was parsed from /uploads, save the JSON result on disk for fallback/compatibility
     if (isUpload) {
       fs.writeFileSync(`${filePath}.json`, JSON.stringify(data, null, 2));
     }
 
-    // 3. Save to database
     try {
       const pipelineResult = data.result || data;
       const page0 = pipelineResult?.layoutParsingResults?.[0] || {};
       const markdownText = page0?.markdown?.text || "";
       const docMetadata = parseDOMetadata(markdownText);
-
       const stats = fs.statSync(filePath);
 
-      const insertDocRes = await query(`
-        INSERT INTO documents (filename, upload_time, size, parsed, metadata, layout_parsing_result, is_sample, file_hash, engine)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        ON CONFLICT (filename, engine) DO UPDATE
-        SET upload_time = EXCLUDED.upload_time,
-            size = EXCLUDED.size,
-            parsed = EXCLUDED.parsed,
-            metadata = EXCLUDED.metadata,
-            layout_parsing_result = EXCLUDED.layout_parsing_result,
-            is_sample = EXCLUDED.is_sample,
-            file_hash = EXCLUDED.file_hash
-        RETURNING id
-      `, [
-        safeFile,
-        stats.mtime,
-        stats.size,
-        true,
-        JSON.stringify(docMetadata),
-        JSON.stringify(pipelineResult),
+      await saveToDocuments({
+        filename: safeFile,
+        mtime: stats.mtime,
+        size: stats.size,
+        parsed: true,
+        metadata: docMetadata,
+        layoutResult: pipelineResult,
         isSample,
         fileHash,
-        engine || "paddleocr"
-      ]);
+        engine,
+        ocrStartTime,
+        ocrEndTime,
+        ocrElapsedMs
+      });
 
-      const docId = insertDocRes.rows[0].id;
-
-      // Delete existing items for this document to avoid unique constraints / stale data
-      await query("DELETE FROM ocr_items WHERE document_id = $1", [docId]);
-
-      for (let i = 0; i < docMetadata.items.length; i++) {
-        const item = docMetadata.items[i];
-        await query(`
-          INSERT INTO ocr_items (
-            document_id, row_index, 
-            kode_barang_original, kode_barang, 
-            nama_barang, 
-            banyak_original, banyak, 
-            jumlah_original, jumlah, 
-            is_flagged, remark
-          )
-          VALUES ($1, $2, $3, $3, $4, $5, $5, $6, $6, false, '')
-        `, [
-          docId,
-          i,
-          item.kodeBarang,
-          item.namaBarang,
-          item.banyak,
-          item.jumlah
-        ]);
-      }
-      
-      // Return wrapped success response with items, flagged, remarks
       return NextResponse.json({
         errorCode: 0,
         errorMsg: "Success",

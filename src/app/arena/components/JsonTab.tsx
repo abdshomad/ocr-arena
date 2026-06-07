@@ -35,10 +35,10 @@ export const JsonTab: React.FC<JsonTabProps> = ({
           <select
             value={selectedOverlayEngine}
             onChange={(e) => setSelectedOverlayEngine(e.target.value)}
-            className="bg-slate-955 border border-slate-800 rounded-lg px-2 py-1 text-xs font-bold text-[#0078d4] cursor-pointer"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-bold text-[#0078d4] cursor-pointer"
           >
             {engines.map(e => (
-              <option key={e.id} value={e.id} className="bg-[#111625] text-slate-200">
+              <option key={e.id} value={e.id} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
                 {e.logo} {e.name}
               </option>
             ))}
@@ -51,7 +51,7 @@ export const JsonTab: React.FC<JsonTabProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Find JSON node..."
-            className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs placeholder-slate-550 focus:outline-none w-28 text-slate-200"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs placeholder-slate-400 dark:placeholder-slate-550 focus:outline-none w-28 text-slate-800 dark:text-slate-200"
           />
           <button
             onClick={handleCopyAction}

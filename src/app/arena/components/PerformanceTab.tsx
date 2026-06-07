@@ -75,6 +75,41 @@ export const PerformanceTab: React.FC<PerformanceTabProps> = ({
       throughput: latencySec > 0 ? (charCount / latencySec) : 0
     };
   });
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: "name" | "latency" | "confidence" | "accuracy" | "cost" | "throughput";
+    desc: boolean;
+  } | null>(null);
+
+  const requestSort = (key: "name" | "latency" | "confidence" | "accuracy" | "cost" | "throughput") => {
+    let desc = true;
+    if (sortConfig && sortConfig.key === key) {
+      desc = !sortConfig.desc;
+    }
+    setSortConfig({ key, desc });
+  };
+
+  const renderSortIndicator = (key: "name" | "latency" | "confidence" | "accuracy" | "cost" | "throughput") => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <span className="opacity-30 ml-1 select-none">↕</span>;
+    }
+    return <span className="text-[#0078d4] font-bold ml-1 select-none">{sortConfig.desc ? "▼" : "▲"}</span>;
+  };
+
+  const sortedStatsList = React.useMemo(() => {
+    if (!sortConfig) return statsList;
+    return [...statsList].sort((a, b) => {
+      let valA = a[sortConfig.key];
+      let valB = b[sortConfig.key];
+
+      // Handle nulls in sorting so they stay at the bottom/top appropriately
+      if (valA === null) valA = sortConfig.desc ? -Infinity : Infinity;
+      if (valB === null) valB = sortConfig.desc ? -Infinity : Infinity;
+
+      if (valA < valB) return sortConfig.desc ? 1 : -1;
+      if (valA > valB) return sortConfig.desc ? -1 : 1;
+      return 0;
+    });
+  }, [statsList, sortConfig]);
 
   // Find min/max winners
   const minLatency = Math.min(...statsList.map(s => s.latency));
@@ -108,16 +143,30 @@ export const PerformanceTab: React.FC<PerformanceTabProps> = ({
         <table className="w-full border-collapse text-left text-[10.5px] leading-normal select-none">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-850 text-[8.5px] font-extrabold text-slate-400 uppercase tracking-wider">
-              <th className="p-2">Engine</th>
-              <th className="p-2 text-right">Latency</th>
-              <th className="p-2 text-right">Confidence</th>
-              {showGroundTruth && <th className="p-2 text-right">Accuracy</th>}
-              <th className="p-2 text-right">Est. Cost</th>
-              <th className="p-2 text-right">Speed</th>
+              <th className="p-2 cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors" onClick={() => requestSort("name")}>
+                Engine {renderSortIndicator("name")}
+              </th>
+              <th className="p-2 text-right cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors" onClick={() => requestSort("latency")}>
+                Latency {renderSortIndicator("latency")}
+              </th>
+              <th className="p-2 text-right cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors" onClick={() => requestSort("confidence")}>
+                Confidence {renderSortIndicator("confidence")}
+              </th>
+              {showGroundTruth && (
+                <th className="p-2 text-right cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors" onClick={() => requestSort("accuracy")}>
+                  Accuracy {renderSortIndicator("accuracy")}
+                </th>
+              )}
+              <th className="p-2 text-right cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors" onClick={() => requestSort("cost")}>
+                Est. Cost {renderSortIndicator("cost")}
+              </th>
+              <th className="p-2 text-right cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors" onClick={() => requestSort("throughput")}>
+                Speed {renderSortIndicator("throughput")}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-700 dark:text-slate-350">
-            {statsList.map(s => {
+            {sortedStatsList.map(s => {
               const isFastest = s.latency === minLatency && s.latency > 0;
               const isMostConfident = s.confidence !== null && s.confidence === maxConfidence;
               const isMostAccurate = s.accuracy !== null && s.accuracy === maxAccuracy;

@@ -32,5 +32,5 @@ During comparative analysis runs, 6 engines failed to return layout parsing resu
 - This allows the engines to output accurate OCR markdown text without requiring heavy layout-parsing weights to run locally inside each container. All E2E playwright tests passed successfully after this change.
 
 ## References
-- [AGENTS.md](file:///home/aiserver/LABS/OCR/ocr-arena/AGENTS.md)
-- [plan/omni-ocr-oct-2025-v2.md](file:///home/aiserver/LABS/OCR/ocr-arena/plan/omni-ocr-oct-2025-v2.md)
+- [AGENTS.md](../AGENTS.md)
+- [plan/omni-ocr-oct-2025-v2.md](../plan/omni-ocr-oct-2025-v2.md)

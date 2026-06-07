@@ -58,8 +58,8 @@ export function useArenaState() {
   const [compareLayouts, setCompareLayouts] = useState<boolean>(false);
   const [gridCols, setGridCols] = useState<1 | 2 | 3>(3);
   const [visibleEngines, setVisibleEngines] = useState<string[]>([
-    "nemotron", "paddle", "lightonocr", "glm", "dots", "deepseek",
-    "chandra", "gemma4", "qwen3vl", "litparse", "mineru-diffusion"
+    "nemotron", "paddle", "lightonocr", "glm", "dots",
+    "gemma4", "qwen3vl", "mineru-diffusion"
   ]);
   const [selectedCrop, setSelectedCrop] = useState<{ engineId: string; block: any; cropUrl: string } | null>(null);
   const [cropModeActive, setCropModeActive] = useState<boolean>(false);
@@ -92,6 +92,7 @@ export function useArenaState() {
   const [rightPanelTab, setRightPanelTab] = useState<"fields" | "markdown" | "json" | "metadata" | "arena" | "performance">("arena");
   const [latencyTarget, setLatencyTarget] = useState<number>(3.0);
   const [accuracyTarget, setAccuracyTarget] = useState<number>(90.0);
+  const [showLayoutOverlay, setShowLayoutOverlay] = useState<boolean>(true);
 
   // Analytics
   const [runs, setRuns] = useState<any[]>([]);
@@ -243,6 +244,7 @@ export function useArenaState() {
     imageDimensions, setImageDimensions,
     activeTooltip, setActiveTooltip,
     visibleLabels, setVisibleLabels,
+    showLayoutOverlay, setShowLayoutOverlay,
     toggleTheme
   };
 }

@@ -18,13 +18,18 @@ export async function handleGetHistory(req: NextRequest) {
 
       const exportData = [];
       for (const doc of docRes.rows) {
-        const itemsRes = await query(
-          `SELECT row_index, kode_barang_original, kode_barang, nama_barang, banyak_original, banyak, jumlah_original, jumlah, is_flagged, remark
-           FROM ocr_items 
-           WHERE document_id = $1 
-           ORDER BY row_index ASC`,
-          [doc.id]
-        );
+        const metadata = doc.metadata || {};
+        const rawItems = metadata.items || [];
+        const flagged = metadata.flagged || {};
+        const remarks = metadata.remarks || {};
+
+        const items = rawItems.map((item: any, idx: number) => ({
+          row_index: idx,
+          is_flagged: !!flagged[idx],
+          remark: remarks[idx] || "",
+          ...item
+        }));
+
         exportData.push({
           filename: doc.filename,
           upload_time: doc.upload_time ? doc.upload_time.toISOString() : new Date().toISOString(),
@@ -35,7 +40,7 @@ export async function handleGetHistory(req: NextRequest) {
           layout_parsing_result: doc.layout_parsing_result,
           file_hash: doc.file_hash,
           engine: doc.engine,
-          items: itemsRes.rows
+          items
         });
       }
 
@@ -55,7 +60,7 @@ export async function handleGetHistory(req: NextRequest) {
       
       // 1. Try to load from database first
       const docRes = await query(
-        "SELECT id, layout_parsing_result, metadata FROM documents WHERE filename = $1 AND engine = $2",
+        "SELECT id, layout_parsing_result, metadata, is_accurate, is_loved, rating_stars, ocr_remarks, is_fast FROM documents WHERE filename = $1 AND engine = $2",
         [safeFile, engineParam]
       );
       
@@ -67,35 +72,20 @@ export async function handleGetHistory(req: NextRequest) {
         // Clean up and re-index invalid items first
         await cleanupAndReindexItems(docId);
 
-        // Fetch items
-        const itemsRes = await query(
-          `SELECT row_index, 
-                  kode_barang, nama_barang, banyak, jumlah, 
-                  is_flagged, remark 
-           FROM ocr_items 
-           WHERE document_id = $1 
-           ORDER BY row_index`,
-          [docId]
-        );
+        // Fetch refreshed metadata
+        const freshRes = await query("SELECT metadata FROM documents WHERE id = $1", [docId]);
+        const metadata = freshRes.rows[0]?.metadata || {};
 
-        const items = itemsRes.rows.map(row => ({
-          kodeBarang: row.kode_barang,
-          namaBarang: row.nama_barang,
-          banyak: row.banyak,
-          jumlah: row.jumlah
+        const rawItems = metadata.items || [];
+        const items = rawItems.map((item: any) => ({
+          kodeBarang: item.kodeBarang || item.kode_barang || "",
+          namaBarang: item.namaBarang || item.nama_barang || "",
+          banyak: item.banyak || "",
+          jumlah: item.jumlah || ""
         }));
 
-        const flagged: Record<number, boolean> = {};
-        const remarks: Record<number, string> = {};
-
-        itemsRes.rows.forEach(row => {
-          if (row.is_flagged) {
-            flagged[row.row_index] = true;
-          }
-          if (row.remark && row.remark.trim()) {
-            remarks[row.row_index] = row.remark;
-          }
-        });
+        const flagged = metadata.flagged || {};
+        const remarks = metadata.remarks || {};
 
         return NextResponse.json({
           errorCode: 0,
@@ -104,7 +94,12 @@ export async function handleGetHistory(req: NextRequest) {
           items,
           flagged,
           remarks,
-          headerRemark: (doc.metadata as any)?.headerRemark || ""
+          headerRemark: (doc.metadata as any)?.headerRemark || "",
+          isAccurate: doc.is_accurate,
+          isLoved: doc.is_loved,
+          ratingStars: doc.rating_stars,
+          ocrRemarks: doc.ocr_remarks,
+          isFast: doc.is_fast
         });
       }
 
@@ -129,21 +124,49 @@ export async function handleGetHistory(req: NextRequest) {
     let listRes;
     if (showAll) {
       listRes = await query(
-        `SELECT id, filename, upload_time, size, parsed, is_sample, metadata, engine, layout_parsing_result,
-                (SELECT time_elapsed_ms FROM arena_runs r 
-                 WHERE (r.image_path = '/arena/' || filename OR r.image_path = '/uploads/' || filename OR r.image_path = filename)
-                   AND r.engine = engine
-                 ORDER BY r.created_at DESC LIMIT 1) as latency_ms
+        `SELECT id, filename, upload_time, size, parsed, is_sample, metadata, engine, layout_parsing_result, is_accurate, is_loved, rating_stars, ocr_remarks, is_fast,
+                COALESCE(ocr_start_time, (
+                  SELECT start_time FROM arena_runs r 
+                  WHERE (r.image_path = '/arena/' || filename OR r.image_path = '/uploads/' || filename OR r.image_path = filename)
+                    AND r.engine = engine
+                  ORDER BY r.created_at DESC LIMIT 1
+                )) as ocr_start_time,
+                COALESCE(ocr_end_time, (
+                  SELECT end_time FROM arena_runs r 
+                  WHERE (r.image_path = '/arena/' || filename OR r.image_path = '/uploads/' || filename OR r.image_path = filename)
+                    AND r.engine = engine
+                  ORDER BY r.created_at DESC LIMIT 1
+                )) as ocr_end_time,
+                COALESCE(ocr_elapsed_ms, (
+                  SELECT time_elapsed_ms FROM arena_runs r 
+                  WHERE (r.image_path = '/arena/' || filename OR r.image_path = '/uploads/' || filename OR r.image_path = filename)
+                    AND r.engine = engine
+                  ORDER BY r.created_at DESC LIMIT 1
+                )) as latency_ms
          FROM documents 
          ORDER BY upload_time DESC`
       );
     } else {
       listRes = await query(
-        `SELECT id, filename, upload_time, size, parsed, is_sample, metadata, engine, layout_parsing_result,
-                (SELECT time_elapsed_ms FROM arena_runs r 
-                 WHERE (r.image_path = '/arena/' || filename OR r.image_path = '/uploads/' || filename OR r.image_path = filename)
-                   AND r.engine = engine
-                 ORDER BY r.created_at DESC LIMIT 1) as latency_ms
+        `SELECT id, filename, upload_time, size, parsed, is_sample, metadata, engine, layout_parsing_result, is_accurate, is_loved, rating_stars, ocr_remarks, is_fast,
+                COALESCE(ocr_start_time, (
+                  SELECT start_time FROM arena_runs r 
+                  WHERE (r.image_path = '/arena/' || filename OR r.image_path = '/uploads/' || filename OR r.image_path = filename)
+                    AND r.engine = engine
+                  ORDER BY r.created_at DESC LIMIT 1
+                )) as ocr_start_time,
+                COALESCE(ocr_end_time, (
+                  SELECT end_time FROM arena_runs r 
+                  WHERE (r.image_path = '/arena/' || filename OR r.image_path = '/uploads/' || filename OR r.image_path = filename)
+                    AND r.engine = engine
+                  ORDER BY r.created_at DESC LIMIT 1
+                )) as ocr_end_time,
+                COALESCE(ocr_elapsed_ms, (
+                  SELECT time_elapsed_ms FROM arena_runs r 
+                  WHERE (r.image_path = '/arena/' || filename OR r.image_path = '/uploads/' || filename OR r.image_path = filename)
+                    AND r.engine = engine
+                  ORDER BY r.created_at DESC LIMIT 1
+                )) as latency_ms
          FROM documents 
          WHERE is_sample = FALSE 
          ORDER BY upload_time DESC`
@@ -173,7 +196,14 @@ export async function handleGetHistory(req: NextRequest) {
         metadata: row.metadata,
         engine: row.engine,
         ocrText: ocrText,
-        latency: row.latency_ms ? Number(row.latency_ms) : null
+        latency: row.latency_ms ? Number(row.latency_ms) : null,
+        ocrStartTime: row.ocr_start_time ? (row.ocr_start_time instanceof Date ? row.ocr_start_time.toISOString() : new Date(row.ocr_start_time).toISOString()) : null,
+        ocrEndTime: row.ocr_end_time ? (row.ocr_end_time instanceof Date ? row.ocr_end_time.toISOString() : new Date(row.ocr_end_time).toISOString()) : null,
+        isAccurate: row.is_accurate,
+        isLoved: row.is_loved,
+        ratingStars: row.rating_stars,
+        ocrRemarks: row.ocr_remarks,
+        isFast: row.is_fast
       };
     });
 

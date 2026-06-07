@@ -90,19 +90,6 @@ async def run_history_tests():
         await page.locator("#max-size-slider").fill("5000000")
         await page.wait_for_timeout(1000)
         
-        # Step 6c2: Test Categorical Tag Filters and Grouping Badges
-        print("Clicking a categorical vendor filter badge...")
-        await page.locator("[id^='vendor-filter-']").first.click(force=True)
-        await page.wait_for_timeout(1000)
-        
-        print("Taking screenshot 06-step6c2-category-filter.jpg...")
-        await page.screenshot(path="./screenshots/06-step6c2-category-filter.jpg")
-        
-        # Restore vendor filter to all
-        print("Restoring vendor filter to All...")
-        await page.locator("#vendor-filter-all").click(force=True)
-        await page.wait_for_timeout(1000)
-        
         # Test Search Scan Outputs and Metadata (Feature 28)
         print("Testing history search box (normal query)...")
         await page.locator("#history-search-input").fill("Acme")
@@ -151,44 +138,6 @@ async def run_history_tests():
             # Collapse it back
             await items_tree_node.click(force=True)
             await page.wait_for_timeout(500)
-        
-        # Test Edit Document Tags and Category Metadata (Inline Edit)
-        print("Clicking a vendor tag badge in the table...")
-        first_tag_badge = page.locator(".tag-badge-vendor").first
-        await first_tag_badge.click(force=True)
-        await page.wait_for_timeout(500)
-        
-        print("Filling inline vendor input...")
-        await page.locator("#inline-vendor-input").fill("Acme Logistics")
-        print("Clicking save inline tags...")
-        await page.locator("#inline-save-tags-btn").click(force=True)
-        await page.wait_for_timeout(1000)
-        
-        # Verify that the vendor badge text now shows "Acme Logistics"
-        print("Verifying updated vendor tag badge in table...")
-        updated_badge_text = await first_tag_badge.text_content()
-        print(f"Updated badge text: {updated_badge_text.strip()}")
-        assert "Acme Logistics" in updated_badge_text, "Failed to update vendor tag badge in table!"
-        
-        # Test Edit Document Tags from Lightbox preview modal
-        print("Opening Lightbox preview modal...")
-        await page.locator("[id^='preview-btn-']").first.click(force=True)
-        await page.wait_for_timeout(1500)
-        
-        print("Filling lightbox vendor input...")
-        await page.locator("#lightbox-vendor-input").fill("Acme Global")
-        print("Clicking save tags in lightbox...")
-        await page.locator("#lightbox-save-tags-btn").click(force=True)
-        await page.wait_for_timeout(1000)
-        
-        print("Closing lightbox preview modal...")
-        await page.locator("#close-lightbox-btn").click(force=True)
-        await page.wait_for_timeout(1000)
-        
-        # Verify that the vendor badge text now shows "Acme Global"
-        updated_badge_text_2 = await first_tag_badge.text_content()
-        print(f"Updated badge text after lightbox edit: {updated_badge_text_2.strip()}")
-        assert "Acme Global" in updated_badge_text_2, "Failed to update vendor tag badge from lightbox!"
         
         # Test Batch Deletion of Log History (Feature 22)
         print("Selecting first document row checkbox...")

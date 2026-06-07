@@ -3,6 +3,7 @@ import { engines, ResultsMap } from "../utils/ocrConstants";
 import { ArenaEngineCard } from "./ArenaEngineCard";
 
 interface ArenaTabProps {
+  selectedFilename: string;
   visibleEngines: string[];
   results: ResultsMap;
   selectedPageIndex: number;
@@ -38,6 +39,7 @@ interface ArenaTabProps {
 }
 
 export const ArenaTab: React.FC<ArenaTabProps> = ({
+  selectedFilename,
   visibleEngines,
   results,
   selectedPageIndex,
@@ -112,10 +114,10 @@ export const ArenaTab: React.FC<ArenaTabProps> = ({
                   setShowDiffs(false);
                 }
               }}
-              className="bg-slate-950 border border-slate-800 rounded px-1 py-0.5 text-[9px] font-bold text-[#0078d4] focus:outline-none cursor-pointer"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-1 py-0.5 text-[9px] font-bold text-[#0078d4] focus:outline-none cursor-pointer"
             >
               {engines.map((eng) => (
-                <option key={eng.id} value={eng.id} className="bg-[#111625] text-slate-205">
+                <option key={eng.id} value={eng.id} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
                   {eng.name}
                 </option>
               ))}
@@ -155,7 +157,7 @@ export const ArenaTab: React.FC<ArenaTabProps> = ({
           <button
             onClick={handleExportZip}
             disabled={!Object.values(results).some(r => r.status === "done")}
-            className="px-2.5 py-1 rounded bg-slate-950 border border-slate-800 hover:bg-slate-900 font-bold text-[9px] transition-all text-slate-350"
+            className="px-2.5 py-1 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold text-[9px] transition-all text-slate-700 dark:text-slate-300 disabled:opacity-50 cursor-pointer"
             title="Export all results as ZIP"
           >
             Export ZIP
@@ -175,6 +177,7 @@ export const ArenaTab: React.FC<ArenaTabProps> = ({
           {engines.filter((e) => visibleEngines.includes(e.id)).map((engine) => (
             <ArenaEngineCard
               key={engine.id}
+              selectedFilename={selectedFilename}
               engine={engine}
               res={results[engine.id]}
               selectedPageIndex={selectedPageIndex}

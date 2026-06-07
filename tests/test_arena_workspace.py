@@ -32,7 +32,7 @@ async def run_workspace_tests():
         
         # Step 3: Wait for OCR to complete
         print("Waiting for OCR processing to complete...")
-        await page.wait_for_selector("button:has-text('Run analysis')", timeout=90000)
+        await page.wait_for_selector("button:has-text('Run analysis')", timeout=180000)
         await page.wait_for_timeout(2000)
         
         print("Taking screenshot 03-step3-default-results.jpg...")
@@ -66,8 +66,8 @@ async def run_workspace_tests():
         print("Activating multi-engine layout overlays (Paddle VL 1.6)...")
         await page.locator("button:has-text('Paddle VL 1.6')").first.click(force=True)
         await page.wait_for_timeout(1000)
-        print("Activating multi-engine layout overlays (DeepSeek 2)...")
-        await page.locator("button:has-text('DeepSeek 2')").first.click(force=True)
+        print("Activating multi-engine layout overlays (GLM-OCR)...")
+        await page.locator("button:has-text('GLM-OCR')").first.click(force=True)
         await page.wait_for_timeout(1500)
         print("Taking screenshot 03-step3p-multi-engine-overlay.jpg...")
         await page.screenshot(path="./screenshots/03-step3p-multi-engine-overlay.jpg")
@@ -76,8 +76,8 @@ async def run_workspace_tests():
         print("Deactivating Paddle VL 1.6 overlay on canvas...")
         await page.locator("button:has-text('Paddle VL 1.6')").first.click(force=True)
         await page.wait_for_timeout(500)
-        print("Deactivating DeepSeek 2 overlay on canvas...")
-        await page.locator("button:has-text('DeepSeek 2')").first.click(force=True)
+        print("Deactivating GLM-OCR overlay on canvas...")
+        await page.locator("button:has-text('GLM-OCR')").first.click(force=True)
         await page.wait_for_timeout(1000)
         
         # Step 3b: Click the "Diff" checkbox

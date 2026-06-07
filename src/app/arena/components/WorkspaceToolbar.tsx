@@ -86,7 +86,9 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
                 className="bg-transparent text-[#0078d4] font-semibold text-xs focus:outline-none cursor-pointer"
               >
                 {Array.from({ length: pageCount }).map((_, i) => (
-                  <option key={i} value={i}>Page {i + 1} of {pageCount}</option>
+                  <option key={i} value={i} className="bg-white dark:bg-[#292827] text-slate-800 dark:text-slate-200">
+                    Page {i + 1} of {pageCount}
+                  </option>
                 ))}
               </select>
               <button disabled={selectedPageIndex >= pageCount - 1} onClick={() => setSelectedPageIndex((p) => Math.min(pageCount - 1, p + 1))} className="px-1 disabled:opacity-30">▶</button>
@@ -116,9 +118,13 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
             value={batchSize}
             onChange={(e) => setBatchSize(Number(e.target.value))}
             disabled={isRunning || isBatchRunning}
-            className="text-[11px] border fluent-border rounded-sm px-2 py-1 bg-[var(--fluent-surface)]"
+            className="text-[11px] border fluent-border rounded-sm px-2 py-1 bg-[var(--fluent-surface)] text-[var(--fluent-text)] focus:outline-none cursor-pointer"
           >
-            {[1, 2, 3, 4, 6, 12].map((n) => <option key={n} value={n}>{n === 1 ? "Sequential" : `${n} parallel`}</option>)}
+            {[1, 2, 3, 4, 6, 12].map((n) => (
+              <option key={n} value={n} className="bg-white dark:bg-[#292827] text-slate-800 dark:text-slate-200">
+                {n === 1 ? "Sequential" : `${n} parallel`}
+              </option>
+            ))}
           </select>
 
           {rightPanelTab === "arena" && (

@@ -13,38 +13,28 @@ export async function POST(req: NextRequest) {
 
     const safeFile = path.basename(page);
 
-    // Get document ID
-    const docRes = await query("SELECT id FROM documents WHERE filename = $1", [safeFile]);
+    // Get document metadata
+    const docRes = await query("SELECT id, metadata FROM documents WHERE filename = $1", [safeFile]);
     if (!docRes.rowCount || docRes.rowCount === 0) {
       return NextResponse.json({ error: "Document not found in database" }, { status: 404 });
     }
     const docId = docRes.rows[0].id;
-
+    const metadata = docRes.rows[0].metadata || {};
+    
     if (action === "edit") {
       const { field, value } = body;
       if (!field || value === undefined) {
         return NextResponse.json({ error: "Missing edit parameters" }, { status: 400 });
       }
 
-      // Map UI field names to database columns
-      let colName = "";
-      if (field === "kodeBarang") {
-        colName = "kode_barang";
-      } else if (field === "banyak") {
-        colName = "banyak";
-      } else if (field === "jumlah") {
-        colName = "jumlah";
+      if (!metadata.items) metadata.items = [];
+      if (metadata.items[rowIndex]) {
+        metadata.items[rowIndex][field] = value;
       } else {
-        return NextResponse.json({ error: "Invalid field name" }, { status: 400 });
+        metadata.items[rowIndex] = { [field]: value };
       }
 
-      await query(
-        `UPDATE ocr_items 
-         SET ${colName} = $1 
-         WHERE document_id = $2 AND row_index = $3`,
-        [value, docId, rowIndex]
-      );
-
+      await query("UPDATE documents SET metadata = $1 WHERE id = $2", [JSON.stringify(metadata), docId]);
       return NextResponse.json({ success: true });
     } else if (action === "flag") {
       const { isFlagged, remark } = body;
@@ -52,13 +42,22 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Missing flag parameters" }, { status: 400 });
       }
 
-      await query(
-        `UPDATE ocr_items 
-         SET is_flagged = $1, remark = $2 
-         WHERE document_id = $3 AND row_index = $4`,
-        [!!isFlagged, remark, docId, rowIndex]
-      );
+      if (!metadata.flagged) metadata.flagged = {};
+      if (!metadata.remarks) metadata.remarks = {};
 
+      if (isFlagged) {
+        metadata.flagged[rowIndex] = true;
+      } else {
+        delete metadata.flagged[rowIndex];
+      }
+
+      if (remark && remark.trim()) {
+        metadata.remarks[rowIndex] = remark;
+      } else {
+        delete metadata.remarks[rowIndex];
+      }
+
+      await query("UPDATE documents SET metadata = $1 WHERE id = $2", [JSON.stringify(metadata), docId]);
       return NextResponse.json({ success: true });
     } else {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });

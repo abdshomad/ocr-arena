@@ -1,39 +1,56 @@
 import React from "react";
 import { DocumentHistoryItem, highlightText, ENGINES } from "../utils/historyHelpers";
+import { HistoryLightboxFeedback } from "./HistoryLightboxFeedback";
+
 
 interface HistoryLightboxProps {
   previewItem: DocumentHistoryItem;
   setPreviewItem: (item: DocumentHistoryItem | null) => void;
   previewMarkdown: string;
+  previewRawResult: any;
   loadingPreview: boolean;
-  editVendor: string;
-  setEditVendor: (v: string) => void;
-  editDocType: string;
-  setEditDocType: (t: string) => void;
-  editCurrency: string;
-  setEditCurrency: (c: string) => void;
-  handleSaveTags: () => void;
-  savingTags: boolean;
   searchQuery: string;
   isRegexSearch: boolean;
+  onSubmitFeedback: (
+    filename: string,
+    engine: string,
+    updates: {
+      isAccurate?: boolean | null;
+      isLoved?: boolean | null;
+      ratingStars?: number | null;
+    }
+  ) => void;
 }
+
+const labelColors: Record<string, { stroke: string; fill: string }> = {
+  text: { stroke: "#10b981", fill: "rgba(16, 185, 129, 0.08)" },
+  header: { stroke: "#3b82f6", fill: "rgba(59, 130, 246, 0.08)" },
+  display_formula: { stroke: "#a855f7", fill: "rgba(168, 85, 247, 0.08)" },
+  inline_formula: { stroke: "#c084fc", fill: "rgba(192, 132, 252, 0.08)" },
+  table: { stroke: "#f59e0b", fill: "rgba(245, 158, 11, 0.08)" },
+  image: { stroke: "#ec4899", fill: "rgba(236, 72, 153, 0.08)" },
+  number: { stroke: "#64748b", fill: "rgba(100, 116, 139, 0.08)" },
+  footer: { stroke: "#06b6d4", fill: "rgba(6, 182, 212, 0.08)" }
+};
+
+const defaultColor = { stroke: "#14b8a6", fill: "rgba(20, 184, 166, 0.08)" };
 
 export const HistoryLightbox: React.FC<HistoryLightboxProps> = ({
   previewItem,
   setPreviewItem,
   previewMarkdown,
+  previewRawResult,
   loadingPreview,
-  editVendor,
-  setEditVendor,
-  editDocType,
-  setEditDocType,
-  editCurrency,
-  setEditCurrency,
-  handleSaveTags,
-  savingTags,
   searchQuery,
-  isRegexSearch
+  isRegexSearch,
+  onSubmitFeedback
 }) => {
+  const [imageDimensions, setImageDimensions] = React.useState<{ width: number; height: number } | null>(null);
+
+  React.useEffect(() => {
+    setImageDimensions(null);
+  }, [previewItem.filename]);
+
   const getEngineDisplay = (engineId: string) => {
     const found = ENGINES.find((e) => e.id === engineId);
     return found ? `${found.logo} ${found.name}` : `🤖 ${engineId}`;
@@ -42,6 +59,10 @@ export const HistoryLightbox: React.FC<HistoryLightboxProps> = ({
   const imageSrc = previewItem.isSample 
     ? `/arena/${previewItem.filename}` 
     : `/api/files?file=${encodeURIComponent(previewItem.filename)}`;
+
+  const pageResult = previewRawResult?.layoutParsingResults?.[0] || previewRawResult || {};
+  const rawBlocks = pageResult.prunedResult?.parsing_res_list || pageResult.parsing_res_list || [];
+  const blocks = Array.isArray(rawBlocks) ? rawBlocks : [];
 
   return (
     <div 
@@ -52,14 +73,53 @@ export const HistoryLightbox: React.FC<HistoryLightboxProps> = ({
         
         {/* Left Column: Original Document Image */}
         <div className="flex-1 bg-slate-950 flex flex-col items-center justify-center p-6 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 relative min-h-[250px] md:min-h-0">
-          <span className="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-800 text-[9px] font-bold text-slate-400 select-none uppercase tracking-wider">
+          <span className="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-800 text-[9px] font-bold text-slate-400 select-none uppercase tracking-wider z-10">
             Document Image
           </span>
-          <img
-            src={imageSrc}
-            alt="Original document preview"
-            className="max-w-full max-h-full object-contain rounded-lg shadow-lg border border-slate-800"
-          />
+          <div className="relative inline-block max-w-full max-h-full">
+            <img
+              src={imageSrc}
+              alt="Original document preview"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-lg border border-slate-800"
+              onLoad={(e) => {
+                const img = e.currentTarget;
+                setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+              }}
+            />
+            {!loadingPreview && previewRawResult && blocks.length > 0 && (
+              <svg
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                viewBox={
+                  previewItem.engine === "deepseek"
+                    ? "0 0 1000 1000"
+                    : imageDimensions
+                    ? `0 0 ${imageDimensions.width} ${imageDimensions.height}`
+                    : "0 0 1000 1000"
+                }
+                preserveAspectRatio="none"
+              >
+                {blocks.map((block: any, bIdx: number) => {
+                  const [xmin, ymin, xmax, ymax] = block.block_bbox || [0, 0, 0, 0];
+                  const label = block.block_label || "text";
+                  const color = labelColors[label] || defaultColor;
+                  return (
+                    <rect
+                      key={`preview-overlay-${bIdx}`}
+                      x={xmin}
+                      y={ymin}
+                      width={xmax - xmin}
+                      height={ymax - ymin}
+                      style={{
+                        fill: color.fill,
+                        stroke: color.stroke,
+                        strokeWidth: "1.5px",
+                      }}
+                    />
+                  );
+                })}
+              </svg>
+            )}
+          </div>
         </div>
 
         {/* Right Column: Parsed Markdown Text */}
@@ -82,62 +142,11 @@ export const HistoryLightbox: React.FC<HistoryLightboxProps> = ({
               </h3>
             </div>
 
-            {/* Editable Tags Section */}
-            <div className="bg-slate-55 dark:bg-slate-955 border border-slate-200 dark:border-slate-800/85 rounded-2xl p-4 space-y-3">
-              <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block select-none">
-                Categorical Metadata Tags
-              </span>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-450 select-none">Vendor</label>
-                  <input
-                    type="text"
-                    value={editVendor}
-                    onChange={(e) => setEditVendor(e.target.value)}
-                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0078d4]/50"
-                    placeholder="Vendor..."
-                    id="lightbox-vendor-input"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-450 select-none">Doc Type</label>
-                  <select
-                    value={editDocType}
-                    onChange={(e) => setEditDocType(e.target.value)}
-                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0078d4]/50 cursor-pointer"
-                    id="lightbox-doctype-select"
-                  >
-                    <option value="Invoice">Invoice</option>
-                    <option value="Receipt">Receipt</option>
-                    <option value="Purchase Order">Purchase Order</option>
-                    <option value="Delivery Order">Delivery Order</option>
-                    <option value="Sales Order">Sales Order</option>
-                    <option value="Unknown">Unknown</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-450 select-none">Currency</label>
-                  <input
-                    type="text"
-                    value={editCurrency}
-                    onChange={(e) => setEditCurrency(e.target.value)}
-                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0078d4]/50"
-                    placeholder="Currency..."
-                    id="lightbox-currency-input"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 pt-1 border-t border-slate-150/50 dark:border-slate-800/30">
-                <button
-                  onClick={handleSaveTags}
-                  disabled={savingTags}
-                  id="lightbox-save-tags-btn"
-                  className="px-3.5 py-1.5 rounded-xl bg-[#0078d4] hover:bg-[#106ebe] text-white text-[10px] font-bold transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {savingTags ? "Saving..." : "Save Tags"}
-                </button>
-              </div>
-            </div>
+            {/* Feedback & Rating Section */}
+            <HistoryLightboxFeedback
+              previewItem={previewItem}
+              onSubmitFeedback={onSubmitFeedback}
+            />
 
             <div className="space-y-1.5 flex-1 flex flex-col min-h-0">
               <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">

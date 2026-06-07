@@ -1,152 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { DocumentHistoryItem, getVendor, getDocType } from "../utils/historyHelpers";
+import { DocumentHistoryItem } from "../utils/historyHelpers";
 
 export function useHistoryMetadata(state: any) {
   const {
-    setInlineEditItem,
-    inlineEditItem,
-    setInlineVendor,
-    inlineVendor,
-    setInlineDocType,
-    inlineDocType,
-    setInlineCurrency,
-    inlineCurrency,
-    setSavingInlineTags,
-    setHistoryList,
-    previewItem,
-    setPreviewItem,
-    setSavingTags,
-    editVendor,
-    editDocType,
-    editCurrency,
-    selectedItems,
-    setSelectedItems,
-    setSavingBulkTags,
-    bulkVendor,
-    setBulkVendor,
-    bulkDocType,
-    setBulkDocType,
-    bulkCurrency,
-    setBulkCurrency,
-    bulkCustomTag,
-    setBulkCustomTag,
+    setHistoryList, previewItem, setPreviewItem,
+    selectedItems, setSelectedItems, setSavingBulkTags,
+    bulkCustomTag, setBulkCustomTag,
     setIsBulkEditOpen
   } = state;
-
-  const handleOpenInlineEdit = (item: DocumentHistoryItem) => {
-    setInlineEditItem(item);
-    const currentVendor = getVendor(item);
-    const currentDocType = getDocType(item);
-    const currentCurrency = item.metadata?.currency || item.metadata?.Currency || "";
-    setInlineVendor(currentVendor === "Unknown" ? "" : currentVendor);
-    setInlineDocType(currentDocType === "Unknown" ? "Invoice" : currentDocType);
-    setInlineCurrency(currentCurrency);
-  };
-
-  const handleSaveInlineTags = async () => {
-    if (!inlineEditItem) return;
-    setSavingInlineTags(true);
-    try {
-      const metadataUpdates = {
-        vendorInfo: inlineVendor,
-        documentType: inlineDocType,
-        currency: inlineCurrency
-      };
-
-      const res = await fetch("/api/history", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: inlineEditItem.filename,
-          metadataUpdates
-        })
-      });
-
-      if (res.ok) {
-        setHistoryList((prev: any[]) => prev.map(item => {
-          if (item.filename === inlineEditItem.filename) {
-            return {
-              ...item,
-              metadata: {
-                ...(item.metadata || {}),
-                ...metadataUpdates
-              }
-            };
-          }
-          return item;
-        }));
-        setInlineEditItem(null);
-      } else {
-        const err = await res.json();
-        alert(`Failed to save tags: ${err.error || "Unknown error"}`);
-      }
-    } catch (err) {
-      console.error("Error saving tags:", err);
-      alert("Failed to connect to server.");
-    } finally {
-      setSavingInlineTags(false);
-    }
-  };
-
-  const handleSaveTags = async () => {
-    if (!previewItem) return;
-    setSavingTags(true);
-    try {
-      const metadataUpdates = {
-        vendorInfo: editVendor,
-        documentType: editDocType,
-        currency: editCurrency
-      };
-
-      const res = await fetch("/api/history", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: previewItem.filename,
-          metadataUpdates
-        })
-      });
-
-      if (res.ok) {
-        setHistoryList((prev: any[]) => prev.map(item => {
-          if (item.filename === previewItem.filename) {
-            return {
-              ...item,
-              metadata: {
-                ...(item.metadata || {}),
-                ...metadataUpdates
-              }
-            };
-          }
-          return item;
-        }));
-        setPreviewItem((prev: any) => prev ? {
-          ...prev,
-          metadata: {
-            ...(prev.metadata || {}),
-            ...metadataUpdates
-          }
-        } : null);
-      } else {
-        const err = await res.json();
-        alert(`Failed to save tags: ${err.error || "Unknown error"}`);
-      }
-    } catch (err) {
-      console.error("Error saving tags:", err);
-      alert("Failed to connect to server.");
-    } finally {
-      setSavingTags(false);
-    }
-  };
 
   const handleSaveBulkTags = async () => {
     if (selectedItems.length === 0) return;
     setSavingBulkTags(true);
     try {
       const metadataUpdates: Record<string, any> = {};
-      if (bulkVendor) metadataUpdates.vendorInfo = bulkVendor;
-      if (bulkDocType && bulkDocType !== "Keep") metadataUpdates.documentType = bulkDocType;
-      if (bulkCurrency) metadataUpdates.currency = bulkCurrency;
       if (bulkCustomTag) {
         metadataUpdates.tags = bulkCustomTag.split(",").map((t: string) => t.trim()).filter(Boolean);
       }
@@ -181,9 +48,6 @@ export function useHistoryMetadata(state: any) {
         }));
         
         setIsBulkEditOpen(false);
-        setBulkVendor("");
-        setBulkDocType("Keep");
-        setBulkCurrency("");
         setBulkCustomTag("");
         setSelectedItems([]); // Clear selection
       } else {
@@ -198,10 +62,63 @@ export function useHistoryMetadata(state: any) {
     }
   };
 
+  const onSubmitFeedback = async (
+    filename: string,
+    engine: string,
+    updates: {
+      isAccurate?: boolean | null;
+      isLoved?: boolean | null;
+      ratingStars?: number | null;
+      ocrRemarks?: string | null;
+      isFast?: boolean | null;
+    }
+  ) => {
+    // 1. Optimistic UI update in the list
+    setHistoryList((prev: any[]) => prev.map(item => {
+      if (item.filename === filename && item.engine === engine) {
+        const nextItem = { ...item };
+        if (updates.isAccurate !== undefined) nextItem.isAccurate = updates.isAccurate;
+        if (updates.isLoved !== undefined) nextItem.isLoved = updates.isLoved;
+        if (updates.ratingStars !== undefined) nextItem.ratingStars = updates.ratingStars;
+        if (updates.ocrRemarks !== undefined) nextItem.ocrRemarks = updates.ocrRemarks;
+        if (updates.isFast !== undefined) nextItem.isFast = updates.isFast;
+        return nextItem;
+      }
+      return item;
+    }));
+
+    // 2. Optimistic UI update for the preview item
+    setPreviewItem((prev: any) => {
+      if (prev && prev.filename === filename && prev.engine === engine) {
+        const nextItem = { ...prev };
+        if (updates.isAccurate !== undefined) nextItem.isAccurate = updates.isAccurate;
+        if (updates.isLoved !== undefined) nextItem.isLoved = updates.isLoved;
+        if (updates.ratingStars !== undefined) nextItem.ratingStars = updates.ratingStars;
+        if (updates.ocrRemarks !== undefined) nextItem.ocrRemarks = updates.ocrRemarks;
+        if (updates.isFast !== undefined) nextItem.isFast = updates.isFast;
+        return nextItem;
+      }
+      return prev;
+    });
+
+    try {
+      await fetch("/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "feedback",
+          filename,
+          engine,
+          ...updates
+        })
+      });
+    } catch (err) {
+      console.error("Failed to submit feedback:", err);
+    }
+  };
+
   return {
-    handleOpenInlineEdit,
-    handleSaveInlineTags,
-    handleSaveTags,
-    handleSaveBulkTags
+    handleSaveBulkTags,
+    onSubmitFeedback
   };
 }

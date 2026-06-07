@@ -3,8 +3,6 @@ import React from "react";
 import { 
   DocumentHistoryItem, 
   highlightText, 
-  getVendor, 
-  getDocType, 
   formatBytes, 
   formatDate,
 } from "../utils/historyHelpers";
@@ -21,7 +19,6 @@ interface HistoryDesktopTableProps {
   isRegexSearch: boolean;
   setPreviewItem: (item: DocumentHistoryItem | null) => void;
   handleDelete: (filename: string) => void;
-  handleOpenInlineEdit: (item: DocumentHistoryItem) => void;
   sortColumns: { id: string; desc: boolean }[];
   handleSort: (columnId: string, event: React.MouseEvent) => void;
   getEngineDisplay: (engineId: string) => string;
@@ -41,7 +38,6 @@ export const HistoryDesktopTable: React.FC<HistoryDesktopTableProps> = ({
   isRegexSearch,
   setPreviewItem,
   handleDelete,
-  handleOpenInlineEdit,
   handleSort,
   getEngineDisplay,
   renderSortIndicator,
@@ -72,15 +68,15 @@ export const HistoryDesktopTable: React.FC<HistoryDesktopTableProps> = ({
                 <span>Document Details</span>
                 <div className="flex items-center gap-2 text-[9px] font-bold text-slate-405 dark:text-slate-505 normal-case">
                   <span onClick={(e) => handleSort('uploadTime', e)} className="hover:text-[#0078d4] cursor-pointer flex items-center transition-colors">
-                    Date {renderSortIndicator('uploadTime')}
+                     Date {renderSortIndicator('uploadTime')}
                   </span>
                   <span>•</span>
                   <span onClick={(e) => handleSort('filename', e)} className="hover:text-[#0078d4] cursor-pointer flex items-center transition-colors">
-                    Name {renderSortIndicator('filename')}
+                     Name {renderSortIndicator('filename')}
                   </span>
                   <span>•</span>
                   <span onClick={(e) => handleSort('size', e)} className="hover:text-[#0078d4] cursor-pointer flex items-center transition-colors">
-                    Size {renderSortIndicator('size')}
+                     Size {renderSortIndicator('size')}
                   </span>
                 </div>
               </div>
@@ -94,12 +90,12 @@ export const HistoryDesktopTable: React.FC<HistoryDesktopTableProps> = ({
             <th className="p-4 select-none">
               <div className="flex items-center justify-between">
                 <span>Parsed Metadata</span>
-                <span onClick={(e) => handleSort('latency', e)} className="hover:text-[#0078d4] cursor-pointer flex items-center transition-colors text-[9px] font-bold text-slate-400 dark:text-slate-500 normal-case mr-4" title="Sort by processing latency">
-                  ⏱️ Sort by Latency {renderSortIndicator('latency')}
+                <span onClick={(e) => handleSort('latency', e)} className="hover:text-[#0078d4] cursor-pointer flex items-center transition-colors text-[9px] font-bold text-slate-400 dark:text-slate-505 normal-case mr-4" title="Sort by processing latency">
+                   ⏱️ Sort by Latency {renderSortIndicator('latency')}
                 </span>
               </div>
             </th>
-            <th onClick={(e) => handleSort('parsed', e)} className="p-4 w-24 hover:bg-slate-100/30 dark:hover:bg-slate-800/30 transition-colors cursor-pointer select-none group text-center">
+            <th onClick={(e) => handleSort('parsed', e)} className="p-4 w-24 hover:bg-slate-100/30 dark:hover:bg-slate-805/30 transition-colors cursor-pointer select-none group text-center">
               <div className="flex items-center justify-center">
                 <span>Status</span>
                 {renderSortIndicator('parsed')}
@@ -151,7 +147,7 @@ export const HistoryDesktopTable: React.FC<HistoryDesktopTableProps> = ({
                       </td>
                       <td className="p-4 align-top">
                         <div className="flex flex-col gap-1">
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          <span className="font-semibold text-slate-800 dark:text-slate-202">
                             {formatDate(item.uploadTime)}
                           </span>
                           <span className="font-mono text-[10px] text-slate-400 truncate max-w-[200px]" title={item.filename}>
@@ -168,17 +164,6 @@ export const HistoryDesktopTable: React.FC<HistoryDesktopTableProps> = ({
                             }`}>
                               {item.isSample ? "Sample" : "Upload"}
                             </span>
-                            <span onClick={() => handleOpenInlineEdit(item)} className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#0078d4]/10 text-[#0078d4] border border-[#0078d4]/20 flex items-center gap-0.5 hover:bg-[#0078d4]/20 cursor-pointer transition-colors tag-badge-vendor" title="Click to edit Vendor tag">
-                              🏷️ {highlightText(getVendor(item), searchQuery, isRegexSearch)}
-                            </span>
-                            <span onClick={() => handleOpenInlineEdit(item)} className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-indigo-500/10 text-indigo-655 dark:text-indigo-400 border border-indigo-500/20 flex items-center gap-0.5 hover:bg-indigo-500/20 cursor-pointer transition-colors tag-badge-doctype" title="Click to edit Document Type tag">
-                              📄 {highlightText(getDocType(item), searchQuery, isRegexSearch)}
-                            </span>
-                            {item.metadata?.currency && (
-                              <span onClick={() => handleOpenInlineEdit(item)} className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-amber-550/10 text-amber-655 dark:text-amber-400 border border-amber-500/20 flex items-center gap-0.5 hover:bg-amber-500/20 cursor-pointer transition-colors tag-badge-currency" title="Click to edit Currency tag">
-                                💵 {highlightText(item.metadata.currency, searchQuery, isRegexSearch)}
-                              </span>
-                            )}
                             {Array.isArray(item.metadata?.tags || item.metadata?.Tags) && 
                               (item.metadata?.tags || item.metadata?.Tags).map((tag: string) => (
                                 <span key={tag} className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-0.5">
@@ -190,20 +175,51 @@ export const HistoryDesktopTable: React.FC<HistoryDesktopTableProps> = ({
                         </div>
                       </td>
                       <td className="p-4 align-top">
-                        <span className="font-bold text-xs text-slate-800 dark:text-slate-200 bg-slate-105 dark:bg-slate-955 px-2 py-1 rounded border border-slate-200/50 dark:border-slate-800/50">
-                          {highlightText(getEngineDisplay(item.engine), searchQuery, isRegexSearch)}
-                        </span>
+                        <div className="flex flex-col gap-1.5 items-start">
+                          <span className="font-bold text-xs text-slate-800 dark:text-slate-200 bg-slate-105 dark:bg-slate-955 px-2 py-1 rounded border border-slate-200/50 dark:border-slate-800/50">
+                            {highlightText(getEngineDisplay(item.engine), searchQuery, isRegexSearch)}
+                          </span>
+                          {(item.isAccurate !== null && item.isAccurate !== undefined ||
+                            item.isLoved !== null && item.isLoved !== undefined ||
+                            item.ratingStars !== null && item.ratingStars !== undefined ||
+                            item.isFast !== null && item.isFast !== undefined ||
+                            item.ocrRemarks) && (
+                            <div className="flex flex-col gap-1 items-start text-xs text-slate-400 select-none">
+                              <div className="flex items-center gap-1.5">
+                                {item.isAccurate === true && <span title="Accurate" className="text-emerald-500 font-bold">👍</span>}
+                                {item.isAccurate === false && <span title="Not Accurate" className="text-rose-500 font-bold">👎</span>}
+                                {item.ratingStars !== null && item.ratingStars !== undefined && item.ratingStars > 0 && (
+                                  <span className="text-amber-500 font-semibold flex items-center gap-0.5">
+                                    ★{item.ratingStars}
+                                  </span>
+                                )}
+                                {item.isLoved === true && <span title="Loved" className="text-rose-500">♥</span>}
+                                {item.isLoved === false && <span title="Hated" className="text-slate-400">💔</span>}
+                                {item.isFast === true && <span title="Fast" className="text-amber-500">⚡</span>}
+                                {item.isFast === false && <span title="Slow" className="text-slate-400 text-[30px] inline-block align-middle leading-none">🐌</span>}
+                              </div>
+                              {item.ocrRemarks && (
+                                <span className="text-[10px] text-slate-405 dark:text-slate-500 italic truncate max-w-[155px]" title={item.ocrRemarks}>
+                                  💬 {highlightText(item.ocrRemarks, searchQuery, isRegexSearch)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4 align-top">
                         {renderMetadata(item.metadata)}
                       </td>
                       <td className="p-4 align-top text-center">
                         <div className="flex flex-col gap-1 items-center">
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${item.parsed ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"}`}>
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${item.parsed ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-450"}`}>
                             {item.parsed ? "parsed" : "failed"}
                           </span>
                           {item.latency !== undefined && item.latency !== null && (
-                            <span className="text-[10px] text-slate-405 dark:text-slate-500 font-mono" title="Processing latency">
+                            <span
+                              className="text-[10px] text-slate-405 dark:text-slate-500 font-mono cursor-help border-b border-dashed border-slate-300 dark:border-slate-700 pb-0.5"
+                              title={`OCR Run Details:\nStart: ${item.ocrStartTime ? formatDate(item.ocrStartTime) : "N/A"}\nEnd: ${item.ocrEndTime ? formatDate(item.ocrEndTime) : "N/A"}\nElapsed: ${(item.latency / 1000).toFixed(2)}s`}
+                            >
                               ⏱️ {(item.latency / 1000).toFixed(2)}s
                             </span>
                           )}
@@ -211,7 +227,7 @@ export const HistoryDesktopTable: React.FC<HistoryDesktopTableProps> = ({
                       </td>
                       <td className="p-4 align-middle text-center">
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                          <button onClick={() => setPreviewItem(item)} id={`preview-btn-${item.id}`} className="w-full sm:w-auto inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl font-bold bg-slate-105 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs transition-colors cursor-pointer">
+                          <button onClick={() => setPreviewItem(item)} id={`preview-btn-${item.id}`} className="w-full sm:w-auto inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl font-bold bg-slate-105 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-202 text-xs transition-colors cursor-pointer">
                             👁️ Preview
                           </button>
                           <a href={`/arena?doc=${encodeURIComponent(item.filename)}`} className="w-full sm:w-auto inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl font-bold bg-[#0078d4] hover:bg-[#106ebe] dark:bg-[#0078d4] dark:hover:bg-[#106ebe] text-white text-xs transition-colors shadow-md shadow-[#0078d4]/10 cursor-pointer">

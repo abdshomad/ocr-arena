@@ -12,7 +12,6 @@ import { HistoryHeatmap } from "./components/HistoryHeatmap";
 import { HistorySidebar } from "./components/HistorySidebar";
 import { HistoryTable } from "./components/HistoryTable";
 import { HistoryLightbox } from "./components/HistoryLightbox";
-import { HistoryInlineEditModal } from "./components/HistoryInlineEditModal";
 import { HistoryBulkEditModal } from "./components/HistoryBulkEditModal";
 import { HistoryLoginView } from "./components/HistoryLoginView";
 import { HistorySearchToolbar } from "./components/HistorySearchToolbar";
@@ -88,13 +87,12 @@ export default function HistoryPage() {
           exportingZip={state.exportingZip}
           handleExportSelectedZIP={exportHandlers.handleExportSelectedZIP}
           handleDeleteSelected={handlers.handleDeleteSelected}
-          setBulkVendor={state.setBulkVendor}
-          setBulkDocType={state.setBulkDocType}
-          setBulkCurrency={state.setBulkCurrency}
           setBulkCustomTag={state.setBulkCustomTag}
           setIsBulkEditOpen={state.setIsBulkEditOpen}
           handleExportHTMLReport={exportHandlers.handleExportHTMLReport}
           handleExportCSV={() => exportHandlers.handleExportCSV(filters.filteredHistory)}
+          sortColumns={state.sortColumns}
+          setSortColumns={state.setSortColumns}
         />
 
         <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
@@ -102,14 +100,18 @@ export default function HistoryPage() {
             <HistorySidebar
               historyList={state.historyList}
               loading={state.loading}
-              selectedVendor={state.selectedVendor}
-              setSelectedVendor={state.setSelectedVendor}
-              selectedDocType={state.selectedDocType}
-              setSelectedDocType={state.setSelectedDocType}
-              selectedCurrency={state.selectedCurrency}
-              setSelectedCurrency={state.setSelectedCurrency}
               selectedTags={state.selectedTags}
               setSelectedTags={state.setSelectedTags}
+              statusFilter={state.statusFilter}
+              setStatusFilter={state.setStatusFilter}
+              loveFilter={state.loveFilter}
+              setLoveFilter={state.setLoveFilter}
+              likeFilter={state.likeFilter}
+              setLikeFilter={state.setLikeFilter}
+              starsFilter={state.starsFilter}
+              setStarsFilter={state.setStarsFilter}
+              fastFilter={state.fastFilter}
+              setFastFilter={state.setFastFilter}
             />
           )}
 
@@ -122,7 +124,7 @@ export default function HistoryPage() {
             ) : filters.filteredHistory.length === 0 ? (
               <div className="bg-white dark:bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center flex flex-col items-center justify-center shadow-lg text-slate-400">
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-300">No History Found</h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-550 mt-1">
                   There are no documents matching the filter.
                 </p>
               </div>
@@ -140,7 +142,6 @@ export default function HistoryPage() {
                 isRegexSearch={state.isRegexSearch}
                 setPreviewItem={state.setPreviewItem}
                 handleDelete={handlers.handleDelete}
-                handleOpenInlineEdit={metadataHandlers.handleOpenInlineEdit}
                 sortColumns={state.sortColumns}
                 handleSort={filters.handleSort}
               />
@@ -154,32 +155,11 @@ export default function HistoryPage() {
           previewItem={state.previewItem}
           setPreviewItem={state.setPreviewItem}
           previewMarkdown={state.previewMarkdown}
+          previewRawResult={state.previewRawResult}
           loadingPreview={state.loadingPreview}
-          editVendor={state.editVendor}
-          setEditVendor={state.setEditVendor}
-          editDocType={state.editDocType}
-          setEditDocType={state.setEditDocType}
-          editCurrency={state.editCurrency}
-          setEditCurrency={state.setEditCurrency}
-          handleSaveTags={metadataHandlers.handleSaveTags}
-          savingTags={state.savingTags}
           searchQuery={state.searchQuery}
           isRegexSearch={state.isRegexSearch}
-        />
-      )}
-
-      {state.inlineEditItem && (
-        <HistoryInlineEditModal
-          inlineEditItem={state.inlineEditItem}
-          setInlineEditItem={state.setInlineEditItem}
-          inlineVendor={state.inlineVendor}
-          setInlineVendor={state.setInlineVendor}
-          inlineDocType={state.inlineDocType}
-          setInlineDocType={state.setInlineDocType}
-          inlineCurrency={state.inlineCurrency}
-          setInlineCurrency={state.setInlineCurrency}
-          handleSaveInlineTags={metadataHandlers.handleSaveInlineTags}
-          savingInlineTags={state.savingInlineTags}
+          onSubmitFeedback={metadataHandlers.onSubmitFeedback}
         />
       )}
 
@@ -187,12 +167,6 @@ export default function HistoryPage() {
         <HistoryBulkEditModal
           selectedItems={state.selectedItems}
           setIsBulkEditOpen={state.setIsBulkEditOpen}
-          bulkVendor={state.bulkVendor}
-          setBulkVendor={state.setBulkVendor}
-          bulkDocType={state.bulkDocType}
-          setBulkDocType={state.setBulkDocType}
-          bulkCurrency={state.bulkCurrency}
-          setBulkCurrency={state.setBulkCurrency}
           bulkCustomTag={state.bulkCustomTag}
           setBulkCustomTag={state.setBulkCustomTag}
           handleSaveBulkTags={metadataHandlers.handleSaveBulkTags}

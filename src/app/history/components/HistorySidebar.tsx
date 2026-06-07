@@ -1,61 +1,39 @@
 import React from "react";
-import { DocumentHistoryItem, getVendor, getDocType } from "../utils/historyHelpers";
+import { DocumentHistoryItem } from "../utils/historyHelpers";
 
 interface HistorySidebarProps {
   historyList: DocumentHistoryItem[];
   loading: boolean;
-  selectedVendor: string;
-  setSelectedVendor: (v: string) => void;
-  selectedDocType: string;
-  setSelectedDocType: (t: string) => void;
-  selectedCurrency: string;
-  setSelectedCurrency: (c: string) => void;
   selectedTags: string[];
   setSelectedTags: React.Dispatch<React.SetStateAction<string[]>>;
+  statusFilter: "all" | "success" | "failed";
+  setStatusFilter: (f: "all" | "success" | "failed") => void;
+  loveFilter: "all" | "loved" | "hated" | "neutral";
+  setLoveFilter: (f: "all" | "loved" | "hated" | "neutral") => void;
+  likeFilter: "all" | "liked" | "disliked" | "unrated";
+  setLikeFilter: (f: "all" | "liked" | "disliked" | "unrated") => void;
+  starsFilter: "all" | "1" | "2" | "3" | "4" | "5";
+  setStarsFilter: (f: "all" | "1" | "2" | "3" | "4" | "5") => void;
+  fastFilter: "all" | "fast" | "slow" | "unrated";
+  setFastFilter: (f: "all" | "fast" | "slow" | "unrated") => void;
 }
 
 export const HistorySidebar: React.FC<HistorySidebarProps> = ({
   historyList,
   loading,
-  selectedVendor,
-  setSelectedVendor,
-  selectedDocType,
-  setSelectedDocType,
-  selectedCurrency,
-  setSelectedCurrency,
   selectedTags,
-  setSelectedTags
+  setSelectedTags,
+  statusFilter,
+  setStatusFilter,
+  loveFilter,
+  setLoveFilter,
+  likeFilter,
+  setLikeFilter,
+  starsFilter,
+  setStarsFilter,
+  fastFilter,
+  setFastFilter
 }) => {
-  const vendorCounts = React.useMemo(() => {
-    const counts: Record<string, number> = {};
-    historyList.forEach((item) => {
-      const v = getVendor(item);
-      counts[v] = (counts[v] || 0) + 1;
-    });
-    return counts;
-  }, [historyList]);
-
-  const docTypeCounts = React.useMemo(() => {
-    const counts: Record<string, number> = {};
-    historyList.forEach((item) => {
-      const t = getDocType(item);
-      counts[t] = (counts[t] || 0) + 1;
-    });
-    return counts;
-  }, [historyList]);
-
-  const currencyCounts = React.useMemo(() => {
-    const counts: Record<string, number> = {};
-    historyList.forEach((item) => {
-      const c = item.metadata?.currency || item.metadata?.Currency || "";
-      const clean = String(c).trim();
-      if (clean && clean.toLowerCase() !== "not found" && clean.toLowerCase() !== "not_found") {
-        counts[clean] = (counts[clean] || 0) + 1;
-      }
-    });
-    return counts;
-  }, [historyList]);
-
   const allTags = React.useMemo(() => {
     const tagsSet = new Set<string>();
     historyList.forEach((item) => {
@@ -75,130 +53,101 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
 
   return (
     <aside className="w-full lg:w-64 flex-shrink-0 space-y-4">
-      <div className="bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-800 p-4 space-y-5 shadow-sm select-none">
+      <div className="bg-white dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-850 p-4 space-y-5 shadow-sm select-none">
         
-        {/* Vendors */}
-        <div>
-          <h3 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-3 select-none">
-            Filter by Vendor
-          </h3>
-          <div className="flex flex-wrap lg:flex-col gap-1.5">
-            <button
-              onClick={() => setSelectedVendor("all")}
-              className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex justify-between items-center ${
-                selectedVendor === "all"
-                  ? "bg-[#0078d4] text-white font-extrabold shadow-sm shadow-[#0078d4]/10"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-              id="vendor-filter-all"
-            >
-              <span>All Vendors</span>
-              <span className={`text-[9px] px-1.5 py-0.2 rounded-full ${selectedVendor === 'all' ? 'bg-[#106ebe] text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
-                {historyList.length}
-              </span>
-            </button>
-            {Object.entries(vendorCounts).map(([vendor, count]) => (
-              <button
-                key={vendor}
-                onClick={() => setSelectedVendor(vendor)}
-                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex justify-between items-center ${
-                  selectedVendor === vendor
-                    ? "bg-[#0078d4] text-white font-extrabold shadow-sm shadow-[#0078d4]/10"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
-                }`}
-                id={`vendor-filter-${vendor.toLowerCase().replace(/\s+/g, "-")}`}
-              >
-                <span className="truncate pr-2">{vendor}</span>
-                <span className={`text-[9px] px-1.5 py-0.2 rounded-full ${selectedVendor === vendor ? 'bg-[#106ebe] text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
-                  {count}
-                </span>
-              </button>
-            ))}
-          </div>
+        {/* Status Filter */}
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block select-none">
+            OCR Status
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(e: any) => setStatusFilter(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-slate-705 dark:text-slate-300 focus:outline-none focus:border-[#0078d4]/50 cursor-pointer"
+            id="status-filter-select"
+          >
+            <option value="all">All Statuses</option>
+            <option value="success">Success Only</option>
+            <option value="failed">Failed Only</option>
+          </select>
         </div>
 
-        {/* Doc Type */}
-        <div className="border-t border-slate-100/10 dark:border-slate-800/30 pt-4">
-          <h3 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-3 select-none">
-            Document Type
-          </h3>
-          <div className="flex flex-wrap lg:flex-col gap-1.5">
-            <button
-              onClick={() => setSelectedDocType("all")}
-              className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex justify-between items-center ${
-                selectedDocType === "all"
-                  ? "bg-[#0078d4] text-white font-extrabold shadow-sm shadow-[#0078d4]/10"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-              id="doctype-filter-all"
-            >
-              <span>All Types</span>
-              <span className={`text-[9px] px-1.5 py-0.2 rounded-full ${selectedDocType === 'all' ? 'bg-[#106ebe] text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
-                {historyList.length}
-              </span>
-            </button>
-            {Object.entries(docTypeCounts).map(([docType, count]) => (
-              <button
-                key={docType}
-                onClick={() => setSelectedDocType(docType)}
-                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex justify-between items-center ${
-                  selectedDocType === docType
-                    ? "bg-[#0078d4] text-white font-extrabold shadow-sm shadow-[#0078d4]/10"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
-                }`}
-                id={`doctype-filter-${docType.toLowerCase().replace(/\s+/g, "-")}`}
-              >
-                <span className="truncate pr-2">{docType}</span>
-                <span className={`text-[9px] px-1.5 py-0.2 rounded-full ${selectedDocType === docType ? 'bg-[#106ebe] text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
-                  {count}
-                </span>
-              </button>
-            ))}
-          </div>
+        {/* Love Filter */}
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block select-none">
+            Love Rating
+          </label>
+          <select
+            value={loveFilter}
+            onChange={(e: any) => setLoveFilter(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-slate-705 dark:text-slate-300 focus:outline-none focus:border-[#0078d4]/50 cursor-pointer"
+            id="love-filter-select"
+          >
+            <option value="all">All Documents</option>
+            <option value="loved">Loved ♥</option>
+            <option value="hated">Hated 💔</option>
+            <option value="neutral">Neutral/Unrated</option>
+          </select>
         </div>
 
-        {/* Currency */}
-        <div className="border-t border-slate-100/10 dark:border-slate-800/30 pt-4">
-          <h3 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-3 select-none">
-            Currencies
-          </h3>
-          <div className="flex flex-wrap lg:flex-col gap-1.5">
-            <button
-              onClick={() => setSelectedCurrency("all")}
-              className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex justify-between items-center ${
-                selectedCurrency === "all"
-                  ? "bg-[#0078d4] text-white font-extrabold shadow-sm shadow-[#0078d4]/10"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-              id="currency-filter-all"
-            >
-              <span>All Currencies</span>
-              <span className={`text-[9px] px-1.5 py-0.2 rounded-full ${selectedCurrency === 'all' ? 'bg-[#106ebe] text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
-                {historyList.length}
-              </span>
-            </button>
-            {Object.entries(currencyCounts).map(([currency, count]) => (
-              <button
-                key={currency}
-                onClick={() => setSelectedCurrency(currency)}
-                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex justify-between items-center ${
-                  selectedCurrency === currency
-                    ? "bg-[#0078d4] text-white font-extrabold shadow-sm shadow-[#0078d4]/10"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
-                }`}
-                id={`currency-filter-${currency.toLowerCase().replace(/\s+/g, "-")}`}
-              >
-                <span className="truncate pr-2">{currency}</span>
-                <span className={`text-[9px] px-1.5 py-0.2 rounded-full ${selectedCurrency === currency ? 'bg-[#106ebe] text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
-                  {count}
-                </span>
-              </button>
-            ))}
-          </div>
+        {/* Like Filter */}
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block select-none">
+            Thumbs Rating
+          </label>
+          <select
+            value={likeFilter}
+            onChange={(e: any) => setLikeFilter(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-slate-705 dark:text-slate-300 focus:outline-none focus:border-[#0078d4]/50 cursor-pointer"
+            id="like-filter-select"
+          >
+            <option value="all">All Feedback</option>
+            <option value="liked">Thumbs Up 👍</option>
+            <option value="disliked">Thumbs Down 👎</option>
+            <option value="unrated">Unrated</option>
+          </select>
+        </div>
+
+        {/* Stars Filter */}
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block select-none">
+            Stars Rating
+          </label>
+          <select
+            value={starsFilter}
+            onChange={(e: any) => setStarsFilter(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-slate-705 dark:text-slate-300 focus:outline-none focus:border-[#0078d4]/50 cursor-pointer"
+            id="stars-filter-select"
+          >
+            <option value="all">All Stars</option>
+            <option value="5">★★★★★ 5 Stars</option>
+            <option value="4">★★★★☆ 4 Stars</option>
+            <option value="3">★★★☆☆ 3 Stars</option>
+            <option value="2">★★☆☆☆ 2 Stars</option>
+            <option value="1">★☆☆☆☆ 1 Star</option>
+          </select>
+        </div>
+
+        {/* Speed Filter */}
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block select-none">
+            Speed Rating
+          </label>
+          <select
+            value={fastFilter}
+            onChange={(e: any) => setFastFilter(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-slate-705 dark:text-slate-300 focus:outline-none focus:border-[#0078d4]/50 cursor-pointer"
+            id="fast-filter-select"
+          >
+            <option value="all">All Speeds</option>
+            <option value="fast">Fast ⚡</option>
+            <option value="slow">Slow 🐌</option>
+            <option value="unrated">Unrated</option>
+          </select>
         </div>
 
         {/* Tags */}
-        <div className="border-t border-slate-100/10 dark:border-slate-800/30 pt-4">
+        <div className="pt-2 border-t border-slate-150/40 dark:border-slate-800/50">
           <h3 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-3 select-none">
             Filter by Tags
           </h3>

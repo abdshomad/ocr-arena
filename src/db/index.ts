@@ -36,35 +36,40 @@ export async function query(text: string, params?: unknown[]) {
 }
 
 export async function cleanupAndReindexItems(docId: number) {
-  // 1. Delete rows where kode_barang is blank/null or doesn't match an 8-digit number
-  await query(
-    `DELETE FROM ocr_items 
-     WHERE document_id = $1 
-       AND (kode_barang IS NULL OR TRIM(kode_barang) = '' OR NOT (kode_barang ~ '^[0-9]{8}$'))`,
-    [docId]
-  );
+  const res = await query("SELECT metadata FROM documents WHERE id = $1", [docId]);
+  if (!res.rowCount || res.rowCount === 0) return;
+  const metadata = res.rows[0].metadata || {};
+  const items = metadata.items || [];
 
-  // 2. Fetch remaining rows ordered by row_index
-  const res = await query(
-    `SELECT id, row_index 
-     FROM ocr_items 
-     WHERE document_id = $1 
-     ORDER BY row_index`,
-    [docId]
-  );
-
-  // 3. Update row_index to be sequential
-  for (let i = 0; i < res.rows.length; i++) {
-    const row = res.rows[i];
-    if (row.row_index !== i) {
-      await query(
-        `UPDATE ocr_items 
-         SET row_index = $1 
-         WHERE id = $2`,
-        [i, row.id]
-      );
+  const regex = /^[0-9]{8}$/;
+  const oldFlagged = metadata.flagged || {};
+  const oldRemarks = metadata.remarks || {};
+  
+  const newItems = [];
+  const newFlagged: Record<number, boolean> = {};
+  const newRemarks: Record<number, string> = {};
+  
+  let newIdx = 0;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const kode = item.kodeBarang || item.kode_barang || "";
+    if (kode && typeof kode === "string" && regex.test(kode.trim())) {
+      newItems.push(item);
+      if (oldFlagged[i]) {
+        newFlagged[newIdx] = true;
+      }
+      if (oldRemarks[i]) {
+        newRemarks[newIdx] = oldRemarks[i];
+      }
+      newIdx++;
     }
   }
+
+  metadata.items = newItems;
+  metadata.flagged = newFlagged;
+  metadata.remarks = newRemarks;
+
+  await query("UPDATE documents SET metadata = $1 WHERE id = $2", [JSON.stringify(metadata), docId]);
 }
 
 export { pool };

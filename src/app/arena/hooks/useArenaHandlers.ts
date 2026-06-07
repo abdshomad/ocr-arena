@@ -93,7 +93,7 @@ export function useArenaHandlers(
         const res = await fetch("/api/arena", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ engine: engine.id, image: imageSource })
+          body: JSON.stringify({ engine: engine.id, image: imageSource, filename })
         });
         
         if (!res.ok) {
@@ -109,7 +109,12 @@ export function useArenaHandlers(
               status: "done",
               text: data.text,
               time: data.elapsedMs,
-              rawResult: data.rawResult
+              rawResult: data.rawResult,
+              isAccurate: data.isAccurate,
+              isLoved: data.isLoved,
+              ratingStars: data.ratingStars,
+              ocrRemarks: data.ocrRemarks,
+              isFast: data.isFast
             }
           }));
         } else {

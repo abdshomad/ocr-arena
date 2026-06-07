@@ -3,12 +3,6 @@ import React from "react";
 interface HistoryBulkEditModalProps {
   selectedItems: string[];
   setIsBulkEditOpen: (open: boolean) => void;
-  bulkVendor: string;
-  setBulkVendor: (v: string) => void;
-  bulkDocType: string;
-  setBulkDocType: (t: string) => void;
-  bulkCurrency: string;
-  setBulkCurrency: (c: string) => void;
   bulkCustomTag: string;
   setBulkCustomTag: (tag: string) => void;
   handleSaveBulkTags: () => void;
@@ -18,12 +12,6 @@ interface HistoryBulkEditModalProps {
 export const HistoryBulkEditModal: React.FC<HistoryBulkEditModalProps> = ({
   selectedItems,
   setIsBulkEditOpen,
-  bulkVendor,
-  setBulkVendor,
-  bulkDocType,
-  setBulkDocType,
-  bulkCurrency,
-  setBulkCurrency,
   bulkCustomTag,
   setBulkCustomTag,
   handleSaveBulkTags,
@@ -52,48 +40,6 @@ export const HistoryBulkEditModal: React.FC<HistoryBulkEditModalProps> = ({
         </p>
         
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold text-slate-405 select-none">Vendor</label>
-            <input
-              type="text"
-              value={bulkVendor}
-              onChange={(e) => setBulkVendor(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0078d4]/50"
-              placeholder="Enter vendor name (leave empty to keep)..."
-              id="bulk-vendor-input"
-            />
-          </div>
-          
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold text-slate-405 select-none">Doc Type</label>
-            <select
-              value={bulkDocType}
-              onChange={(e) => setBulkDocType(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0078d4]/50 cursor-pointer"
-              id="bulk-doctype-select"
-            >
-              <option value="Keep">-- Keep Existing --</option>
-              <option value="Invoice">Invoice</option>
-              <option value="Receipt">Receipt</option>
-              <option value="Purchase Order">Purchase Order</option>
-              <option value="Delivery Order">Delivery Order</option>
-              <option value="Sales Order">Sales Order</option>
-              <option value="Unknown">Unknown</option>
-            </select>
-          </div>
-          
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold text-slate-405 select-none">Currency</label>
-            <input
-              type="text"
-              value={bulkCurrency}
-              onChange={(e) => setBulkCurrency(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0078d4]/50"
-              placeholder="Enter currency (leave empty to keep)..."
-              id="bulk-currency-input"
-            />
-          </div>
-
           <div className="flex flex-col gap-1">
             <label className="text-[10px] font-bold text-slate-405 select-none">Custom Tags (Comma Separated)</label>
             <input

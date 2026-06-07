@@ -97,7 +97,7 @@ services:
       - GENAI_PORT=8118
       - GENAI_MODEL=PaddleOCR-VL-1.6-0.9B
       - GENAI_BACKEND=vllm
-      - CUDA_VISIBLE_DEVICES=0
+      - CUDA_VISIBLE_DEVICES=1
       - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
       - VLLM_USE_V1=0
     volumes:
@@ -130,7 +130,7 @@ services:
       - GENAI_PORT=8119
       - GENAI_MODEL=nvidia/nemotron-ocr-v2
       - GENAI_BACKEND=custom
-      - CUDA_VISIBLE_DEVICES=1
+      - CUDA_VISIBLE_DEVICES=0
     volumes:
       - hf_cache:/root/.cache/huggingface
       - ./ocr-engines/nvidia-nemotron-ocr-v2:/app/nvidia-nemotron-ocr-v2
@@ -142,7 +142,7 @@ services:
       - PIPELINE_HOST=0.0.0.0
       - PIPELINE_PORT=8091
       - PIPELINE_DEVICE=gpu:0
-      - CUDA_VISIBLE_DEVICES=1
+      - CUDA_VISIBLE_DEVICES=0
       - VLLM_SERVER_URL=http://ocr-nemotron:8119/v1
       - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
     depends_on:
@@ -212,7 +212,7 @@ services:
       - GENAI_HOST=0.0.0.0
       - GENAI_PORT=8122
       - GENAI_MODEL=deepseek-ai/DeepSeek-OCR-2
-      - CUDA_VISIBLE_DEVICES=1
+      - CUDA_VISIBLE_DEVICES=0
     volumes:
       - hf_cache:/root/.cache/huggingface
       - ./ocr-engines/deepseek-ocr-2:/app/deepseek-ocr-2
@@ -349,6 +349,7 @@ services:
     environment:
       - GENAI_HOST=0.0.0.0
       - GENAI_PORT=8130
+      - CUDA_VISIBLE_DEVICES=0
     volumes:
       - hf_cache:/root/.cache/huggingface
       - ./ocr-engines/mineru-diffusion:/app/mineru-diffusion

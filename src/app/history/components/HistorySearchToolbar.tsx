@@ -19,13 +19,12 @@ interface HistorySearchToolbarProps {
   exportingZip: boolean;
   handleExportSelectedZIP: () => void;
   handleDeleteSelected: () => void;
-  setBulkVendor: (v: string) => void;
-  setBulkDocType: (t: string) => void;
-  setBulkCurrency: (c: string) => void;
   setBulkCustomTag: (t: string) => void;
   setIsBulkEditOpen: (open: boolean) => void;
   handleExportHTMLReport: () => void;
   handleExportCSV: () => void;
+  sortColumns: { id: string; desc: boolean }[];
+  setSortColumns: React.Dispatch<React.SetStateAction<{ id: string; desc: boolean }[]>>;
 }
 
 export const HistorySearchToolbar: React.FC<HistorySearchToolbarProps> = ({
@@ -46,13 +45,12 @@ export const HistorySearchToolbar: React.FC<HistorySearchToolbarProps> = ({
   exportingZip,
   handleExportSelectedZIP,
   handleDeleteSelected,
-  setBulkVendor,
-  setBulkDocType,
-  setBulkCurrency,
   setBulkCustomTag,
   setIsBulkEditOpen,
   handleExportHTMLReport,
-  handleExportCSV
+  handleExportCSV,
+  sortColumns,
+  setSortColumns
 }) => {
   return (
     <div className="flex flex-col sm:flex-row gap-3">
@@ -114,7 +112,7 @@ export const HistorySearchToolbar: React.FC<HistorySearchToolbarProps> = ({
           type="date"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
-          className="bg-transparent text-[10px] text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+          className="bg-transparent text-[10px] text-slate-700 dark:text-slate-305 focus:outline-none cursor-pointer"
           title="Start Date"
           id="start-date-filter"
         />
@@ -138,6 +136,33 @@ export const HistorySearchToolbar: React.FC<HistorySearchToolbarProps> = ({
             Clear
           </button>
         )}
+      </div>
+
+      {/* Sort Option */}
+      <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-200/50 dark:border-slate-800/50 select-none">
+        <span className="text-[10px] font-bold text-slate-500 whitespace-nowrap">Sort:</span>
+        <select
+          value={
+            sortColumns.length > 0
+              ? `${sortColumns[0].id}-${sortColumns[0].desc ? "desc" : "asc"}`
+              : "uploadTime-desc"
+          }
+          onChange={(e) => {
+            const [id, dir] = e.target.value.split("-");
+            setSortColumns([{ id, desc: dir === "desc" }]);
+          }}
+          className="bg-transparent text-[10px] font-bold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer border-none p-0 pr-1"
+          id="history-sort-select"
+        >
+          <option value="uploadTime-desc" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Date: Newest First</option>
+          <option value="uploadTime-asc" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Date: Oldest First</option>
+          <option value="size-desc" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Size: Largest First</option>
+          <option value="size-asc" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Size: Smallest First</option>
+          <option value="latency-desc" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Elapsed Time: Slowest First</option>
+          <option value="latency-asc" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Elapsed Time: Fastest First</option>
+          <option value="filename-asc" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Name: A-Z</option>
+          <option value="filename-desc" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Name: Z-A</option>
+        </select>
       </div>
 
       {/* Size Slider Filter */}
@@ -184,9 +209,6 @@ export const HistorySearchToolbar: React.FC<HistorySearchToolbarProps> = ({
           </button>
           <button
             onClick={() => {
-              setBulkVendor("");
-              setBulkDocType("Keep");
-              setBulkCurrency("");
               setBulkCustomTag("");
               setIsBulkEditOpen(true);
             }}

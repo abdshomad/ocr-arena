@@ -5,8 +5,11 @@ import { getFilteredText } from "../utils/ocrHelpers";
 import { diffWords } from "../utils/diffUtils";
 import { highlightText } from "../utils/highlightUtils";
 import { ArenaSplitDiff } from "./ArenaSplitDiff";
+import { ArenaFeedbackSection } from "./ArenaFeedbackSection";
+
 
 interface ArenaEngineCardProps {
+  selectedFilename: string;
   engine: typeof engines[number];
   res: EngineResult;
   selectedPageIndex: number;
@@ -36,6 +39,7 @@ interface ArenaEngineCardProps {
 }
 
 export const ArenaEngineCard: React.FC<ArenaEngineCardProps> = ({
+  selectedFilename,
   engine,
   res,
   selectedPageIndex,
@@ -63,6 +67,67 @@ export const ArenaEngineCard: React.FC<ArenaEngineCardProps> = ({
   handleExportSingle,
   results
 }) => {
+  const [isAccurate, setIsAccurate] = React.useState<boolean | null>(null);
+  const [isLoved, setIsLoved] = React.useState<boolean | null>(null);
+  const [ratingStars, setRatingStars] = React.useState<number | null>(null);
+  const [ocrRemarks, setOcrRemarks] = React.useState<string>("");
+  const [isFast, setIsFast] = React.useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    setIsAccurate(res.isAccurate ?? null);
+    setIsLoved(res.isLoved ?? null);
+    setRatingStars(res.ratingStars ?? null);
+    setOcrRemarks(res.ocrRemarks ?? "");
+    setIsFast(res.isFast ?? null);
+  }, [res.isAccurate, res.isLoved, res.ratingStars, res.ocrRemarks, res.isFast]);
+
+  const submitFeedback = async (updates: {
+    isAccurate?: boolean | null;
+    isLoved?: boolean | null;
+    ratingStars?: number | null;
+    ocrRemarks?: string | null;
+    isFast?: boolean | null;
+  }) => {
+    const nextAccurate = updates.isAccurate !== undefined ? updates.isAccurate : isAccurate;
+    const nextLoved = updates.isLoved !== undefined ? updates.isLoved : isLoved;
+    const nextStars = updates.ratingStars !== undefined ? updates.ratingStars : ratingStars;
+    const nextRemarks = updates.ocrRemarks !== undefined ? updates.ocrRemarks : ocrRemarks;
+    const nextFast = updates.isFast !== undefined ? updates.isFast : isFast;
+
+    // Optimistic local state update
+    if (updates.isAccurate !== undefined) setIsAccurate(updates.isAccurate);
+    if (updates.isLoved !== undefined) setIsLoved(updates.isLoved);
+    if (updates.ratingStars !== undefined) setRatingStars(updates.ratingStars);
+    if (updates.ocrRemarks !== undefined) setOcrRemarks(updates.ocrRemarks ?? "");
+    if (updates.isFast !== undefined) setIsFast(updates.isFast);
+
+    // Save to result object so it stays consistent on view changes
+    res.isAccurate = nextAccurate;
+    res.isLoved = nextLoved;
+    res.ratingStars = nextStars;
+    res.ocrRemarks = nextRemarks;
+    res.isFast = nextFast;
+
+    try {
+      await fetch("/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "feedback",
+          filename: selectedFilename,
+          engine: engine.id,
+          isAccurate: nextAccurate,
+          isLoved: nextLoved,
+          ratingStars: nextStars,
+          ocrRemarks: nextRemarks,
+          isFast: nextFast
+        })
+      });
+    } catch (err) {
+      console.error("Failed to submit feedback:", err);
+    }
+  };
+
   const latency = res.time > 0 ? `${(res.time / 1000).toFixed(3)}s` : "-";
   const pageTextRaw = res.rawResult?.layoutParsingResults?.[selectedPageIndex]?.markdown?.text || res.text || "";
   const pageText = getFilteredText(res.rawResult, pageTextRaw, visibleLabels, selectedPageIndex);
@@ -100,6 +165,14 @@ export const ArenaEngineCard: React.FC<ArenaEngineCardProps> = ({
           <span className={`text-[8px] px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider block mb-0.5 ${res.status === "done" ? "bg-emerald-500/10 text-emerald-400" : res.status === "processing" ? "bg-teal-500/10 text-teal-400" : res.status === "failed" ? "bg-rose-500/10 text-rose-455" : "bg-slate-500/10 text-slate-400"}`}>
             {res.status}
           </span>
+          {res.time > 0 && (
+            <span 
+              className="text-[9.5px] text-slate-500 dark:text-slate-400 font-mono mt-0.5 block"
+              title="Processing latency"
+            >
+              ⏱️ {(res.time / 1000).toFixed(2)}s
+            </span>
+          )}
         </div>
       </div>
 
@@ -111,9 +184,9 @@ export const ArenaEngineCard: React.FC<ArenaEngineCardProps> = ({
             onChange={(e) => setCardFontSizes(prev => ({ ...prev, [engine.id]: e.target.value as "sm" | "md" | "lg" }))}
             className="bg-transparent border-none text-[9px] p-0 font-bold focus:ring-0 cursor-pointer text-[#0078d4]"
           >
-            <option value="sm" className="bg-[#111625] text-slate-350">Aa-</option>
-            <option value="md" className="bg-[#111625] text-slate-350">Aa</option>
-            <option value="lg" className="bg-[#111625] text-slate-350">Aa+</option>
+            <option value="sm" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Aa-</option>
+            <option value="md" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Aa</option>
+            <option value="lg" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Aa+</option>
           </select>
           <button
             onClick={() => setCardWordWrap(prev => ({ ...prev, [engine.id]: !(prev[engine.id] !== undefined ? prev[engine.id] : globalWordWrap) }))}
@@ -226,6 +299,18 @@ export const ArenaEngineCard: React.FC<ArenaEngineCardProps> = ({
           {!satisfiesLatency && !satisfiesAccuracy && <span>&amp;</span>}
           {!satisfiesAccuracy && charAcc !== null && <span>🎯 Accuracy ({charAcc.toFixed(1)}% &lt; {accuracyTarget}%)</span>}
         </div>
+      )}
+
+      {res.status === "done" && (
+        <ArenaFeedbackSection
+          engineId={engine.id}
+          isAccurate={isAccurate}
+          isLoved={isLoved}
+          ratingStars={ratingStars}
+          initialOcrRemarks={ocrRemarks}
+          isFast={isFast}
+          onSubmitFeedback={submitFeedback}
+        />
       )}
     </div>
   );

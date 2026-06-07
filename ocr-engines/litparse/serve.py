@@ -1,43 +1,22 @@
 import base64
+import io
 import os
-import json
-import urllib.request
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import uvicorn
+from liteparse import LiteParse
 
 app = FastAPI()
 
 ENGINE_NAME = "LiteParse"
+parser = None
 
-def run_vllm_ocr(vllm_url: str, model_name: str, file_data: str) -> str:
-    if "," in file_data:
-        file_data = file_data.split(",")[1]
-    payload = {
-        "model": model_name,
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "OCR:"},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/png;base64,{file_data}"
-                        }
-                    }
-                ]
-            }
-        ]
-    }
-    req = urllib.request.Request(
-        vllm_url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"}
-    )
-    with urllib.request.urlopen(req) as res:
-        response = json.loads(res.read().decode("utf-8"))
-        return response["choices"][0]["message"]["content"]
+def get_parser():
+    global parser
+    if parser is None:
+        print(f"==> Initializing {ENGINE_NAME} parser...")
+        parser = LiteParse(ocr_enabled=True)
+    return parser
 
 @app.post("/layout-parsing")
 @app.post("/v1/layout-parsing")
@@ -48,9 +27,21 @@ async def layout_parsing(request: Request):
         if not file_data:
             return JSONResponse(status_code=400, content={"error": "No file data provided"})
 
-        # OCR-only fallback using shared ocr-paddleocr vLLM server
-        vllm_url = "http://ocr-paddleocr:8118/v1/chat/completions"
-        output_text = run_vllm_ocr(vllm_url, "PaddleOCR-VL-1.6-0.9B", file_data)
+        if "," in file_data:
+            file_data = file_data.split(",")[1]
+
+        img_bytes = base64.b64decode(file_data)
+        
+        p = get_parser()
+        res = p.parse(img_bytes)
+        
+        text_content = []
+        for page_num in range(1, res.num_pages + 1):
+            page = res.get_page(page_num)
+            if page and page.text:
+                text_content.append(page.text)
+                
+        output_text = "\n\n".join(text_content)
         
         return {
             "errorCode": 0,
@@ -59,7 +50,7 @@ async def layout_parsing(request: Request):
                 "layoutParsingResults": [
                     {
                         "markdown": {
-                            "text": output_text
+                            "text": output_text.strip()
                         },
                         "outputImages": {}
                     }
@@ -67,14 +58,9 @@ async def layout_parsing(request: Request):
             }
         }
     except Exception as e:
-        return JSONResponse(
-            status_code=503,
-            content={
-                "errorCode": 503,
-                "errorMsg": f"Layout parsing is not available for {ENGINE_NAME} engine and OCR-only fallback failed: {e}",
-                "result": {}
-            }
-        )
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"errorCode": 500, "errorMsg": str(e), "result": {}})
 
 if __name__ == "__main__":
     host = os.environ.get("GENAI_HOST", "0.0.0.0")

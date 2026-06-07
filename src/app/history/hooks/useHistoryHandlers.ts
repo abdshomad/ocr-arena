@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { getVendor, getDocType } from "../utils/historyHelpers";
 
 export function useHistoryHandlers(state: any) {
   const {
@@ -137,6 +136,7 @@ export function useHistoryHandlers(state: any) {
   React.useEffect(() => {
     if (!state.previewItem) {
       state.setPreviewMarkdown("");
+      state.setPreviewRawResult(null);
       return;
     }
     
@@ -148,30 +148,21 @@ export function useHistoryHandlers(state: any) {
           const data = await res.json();
           const markdownText = data.result?.layoutParsingResults?.[0]?.markdown?.text || "";
           state.setPreviewMarkdown(markdownText);
+          state.setPreviewRawResult(data.result);
         } else {
           state.setPreviewMarkdown("Failed to load parsed text.");
+          state.setPreviewRawResult(null);
         }
       } catch (err) {
         console.error("Error fetching preview details:", err);
         state.setPreviewMarkdown("Failed to load parsed text.");
+        state.setPreviewRawResult(null);
       } finally {
         state.setLoadingPreview(false);
       }
     };
     
     fetchPreview();
-  }, [state.previewItem]);
-
-  React.useEffect(() => {
-    if (state.previewItem) {
-      const currentVendor = getVendor(state.previewItem);
-      const currentDocType = getDocType(state.previewItem);
-      const currentCurrency = state.previewItem.metadata?.currency || state.previewItem.metadata?.Currency || "";
-      
-      state.setEditVendor(currentVendor === "Unknown" ? "" : currentVendor);
-      state.setEditDocType(currentDocType === "Unknown" ? "Invoice" : currentDocType);
-      state.setEditCurrency(currentCurrency);
-    }
   }, [state.previewItem]);
 
   return {

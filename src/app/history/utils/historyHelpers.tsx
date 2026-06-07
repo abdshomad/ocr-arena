@@ -12,15 +12,33 @@ export interface DocumentHistoryItem {
   engine: string;
   ocrText?: string;
   latency?: number | null;
+  ocrStartTime?: string | null;
+  ocrEndTime?: string | null;
+  isAccurate?: boolean | null;
+  isLoved?: boolean | null;
+  ratingStars?: number | null;
+  ocrRemarks?: string | null;
+  isFast?: boolean | null;
 }
 
+
 export const ENGINES = [
-  { id: "paddleocr", name: "PaddleOCR-VL-1.6 (0.9B)", logo: "🏓" },
   { id: "nemotron", name: "NVIDIA Nemotron OCR v2", logo: "🟢" },
-  { id: "deepseek-ocr-2", name: "DeepSeek-OCR-2", logo: "🐳" },
+  { id: "paddle", name: "Paddle OCR VL 1.6", logo: "🏓" },
+  { id: "paddleocr", name: "Paddle OCR VL 1.6", logo: "🏓" },
+  { id: "lightonocr", name: "LightOnOCR-2-1B", logo: "⚡" },
   { id: "lighton-ocr-2-1b", name: "LightOnOCR-2-1B", logo: "⚡" },
-  { id: "dots-ocr", name: "Dots.OCR", logo: "⚫" },
+  { id: "glm", name: "GLM-OCR", logo: "🧠" },
   { id: "glm-ocr", name: "GLM-OCR", logo: "🧠" },
+  { id: "dots", name: "Dots OCR", logo: "⚫" },
+  { id: "dots-ocr", name: "Dots OCR", logo: "⚫" },
+  { id: "deepseek", name: "DeepSeek OCR 2", logo: "🐳" },
+  { id: "deepseek-ocr-2", name: "DeepSeek OCR 2", logo: "🐳" },
+  { id: "chandra", name: "Chandra OCR 2", logo: "🌙" },
+  { id: "gemma4", name: "Gemma 4", logo: "💎" },
+  { id: "qwen3vl", name: "Qwen3-VL", logo: "🎈" },
+  { id: "litparse", name: "LiteParse", logo: "📄" },
+  { id: "mineru-diffusion", name: "MinerU-Diffusion", logo: "⚒️" },
   { id: "llama3-vision", name: "Llama-3.2-Vision (11B)", logo: "🦙" },
   { id: "deepseek-vl2", name: "DeepSeek-VL2 (Tiny)", logo: "🐠" }
 ];
@@ -81,39 +99,7 @@ export function formatDate(dateStr: string) {
   }
 }
 
-export const getVendor = (item: DocumentHistoryItem) => {
-  if (!item.metadata || typeof item.metadata !== "object") return "Unknown";
-  const meta = item.metadata;
-  const raw = meta.vendorInfo || meta["Vendor Info"] || meta.vendor || meta["Vendor"] || "";
-  const clean = String(raw).trim();
-  if (!clean || clean.toLowerCase() === "not found" || clean.toLowerCase() === "not_found") {
-    return "Unknown";
-  }
-  return clean.replace(/\b\w/g, (c) => c.toUpperCase());
-};
 
-export const getDocType = (item: DocumentHistoryItem) => {
-  if (!item.metadata || typeof item.metadata !== "object") return "Unknown";
-  const meta = item.metadata;
-  
-  if (meta.documentType || meta["Document Type"] || meta.docType) {
-    const raw = meta.documentType || meta["Document Type"] || meta.docType;
-    return String(raw).trim().replace(/\b\w/g, (c) => c.toUpperCase());
-  }
-
-  const hasDo = !!(meta.noDo || meta["No DO"] || meta.deliveryOrder || meta.doNumber);
-  const hasPo = !!(meta.noPo || meta["No PO"] || meta.purchaseOrder || meta.poNumber);
-  const hasSo = !!(meta.noSo || meta["No SO"] || meta.salesOrder || meta.soNumber);
-  if (hasPo) return "Purchase Order";
-  if (hasDo) return "Delivery Order";
-  if (hasSo) return "Sales Order";
-  
-  const name = item.filename.toLowerCase();
-  if (name.includes("invoice") || name.includes("faktur") || name.includes("inv")) return "Invoice";
-  if (name.includes("receipt") || name.includes("struk") || name.includes("rcpt")) return "Receipt";
-  
-  return "Receipt";
-};
 
 export const getLocalDateString = (dateStr: string) => {
   const date = new Date(dateStr);

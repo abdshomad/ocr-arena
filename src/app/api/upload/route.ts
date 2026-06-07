@@ -68,16 +68,71 @@ export async function POST(req: NextRequest) {
     const pipelineUrl = process.env.PIPELINE_URL || "http://paddleocr-pipeline-api:8090/layout-parsing";
     console.log(`Forwarding uploaded file ${filename} to pipeline: ${pipelineUrl}`);
 
-    const response = await fetch(pipelineUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
+    const ocrStartTime = new Date();
+    const startTimeMs = Date.now();
+
+    let response;
+    try {
+      response = await fetch(pipelineUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch (err: any) {
+      const ocrEndTime = new Date();
+      const ocrElapsedMs = Date.now() - startTimeMs;
+      try {
+        await query(`
+          INSERT INTO documents (filename, upload_time, size, parsed, metadata, layout_parsing_result, is_sample, file_hash, engine, ocr_start_time, ocr_end_time, ocr_elapsed_ms)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        `, [
+          filename,
+          new Date(),
+          buffer.length,
+          false,
+          null,
+          JSON.stringify({ error: err.message || "Failed to fetch pipeline" }),
+          false,
+          fileHash,
+          "paddleocr",
+          ocrStartTime,
+          ocrEndTime,
+          ocrElapsedMs
+        ]);
+      } catch (dbErr) {
+        console.error("Database save failed during upload OCR fetch failure:", dbErr);
+      }
+      return NextResponse.json({ error: `Pipeline API fetch error: ${err.message}` }, { status: 500 });
+    }
+
+    const ocrEndTime = new Date();
+    const ocrElapsedMs = Date.now() - startTimeMs;
 
     if (!response.ok) {
       const errText = await response.text();
+      try {
+        await query(`
+          INSERT INTO documents (filename, upload_time, size, parsed, metadata, layout_parsing_result, is_sample, file_hash, engine, ocr_start_time, ocr_end_time, ocr_elapsed_ms)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        `, [
+          filename,
+          new Date(),
+          buffer.length,
+          false,
+          null,
+          JSON.stringify({ error: errText }),
+          false,
+          fileHash,
+          "paddleocr",
+          ocrStartTime,
+          ocrEndTime,
+          ocrElapsedMs
+        ]);
+      } catch (dbErr) {
+        console.error("Database save failed during upload OCR status failure:", dbErr);
+      }
       return NextResponse.json({ error: `Pipeline API error: ${errText}` }, { status: response.status });
     }
 
@@ -95,8 +150,8 @@ export async function POST(req: NextRequest) {
       const docMetadata = parseDOMetadata(markdownText);
 
       const insertDocRes = await query(`
-        INSERT INTO documents (filename, upload_time, size, parsed, metadata, layout_parsing_result, is_sample, file_hash)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO documents (filename, upload_time, size, parsed, metadata, layout_parsing_result, is_sample, file_hash, engine, ocr_start_time, ocr_end_time, ocr_elapsed_ms)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING id
       `, [
         filename,
@@ -106,33 +161,14 @@ export async function POST(req: NextRequest) {
         JSON.stringify(docMetadata),
         JSON.stringify(pipelineResult),
         false,
-        fileHash
+        fileHash,
+        "paddleocr",
+        ocrStartTime,
+        ocrEndTime,
+        ocrElapsedMs
       ]);
 
       const docId = insertDocRes.rows[0].id;
-
-      for (let i = 0; i < docMetadata.items.length; i++) {
-        const item = docMetadata.items[i];
-        await query(`
-          INSERT INTO ocr_items (
-            document_id, row_index, 
-            kode_barang_original, kode_barang, 
-            nama_barang, 
-            banyak_original, banyak, 
-            jumlah_original, jumlah, 
-            is_flagged, remark
-          )
-          VALUES ($1, $2, $3, $3, $4, $5, $5, $6, $6, false, '')
-          ON CONFLICT DO NOTHING
-        `, [
-          docId,
-          i,
-          item.kodeBarang,
-          item.namaBarang,
-          item.banyak,
-          item.jumlah
-        ]);
-      }
     } catch (dbErr) {
       console.error("Database save failed during upload (falling back to file):", dbErr);
     }

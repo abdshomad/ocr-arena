@@ -3,6 +3,11 @@ export interface EngineResult {
   text: string;
   time: number;
   rawResult?: any;
+  isAccurate?: boolean | null;
+  isLoved?: boolean | null;
+  ratingStars?: number | null;
+  ocrRemarks?: string | null;
+  isFast?: boolean | null;
 }
 
 export interface ResultsMap {
@@ -40,11 +45,8 @@ export const engines = [
   { id: "lightonocr", name: "LightOnOCR-2-1B", logo: "⚡" },
   { id: "glm", name: "GLM-OCR", logo: "🧠" },
   { id: "dots", name: "Dots OCR", logo: "⚫" },
-  { id: "deepseek", name: "DeepSeek OCR 2", logo: "🐳" },
-  { id: "chandra", name: "Chandra OCR 2", logo: "🌙" },
   { id: "gemma4", name: "Gemma 4", logo: "💎" },
   { id: "qwen3vl", name: "Qwen3-VL", logo: "🎈" },
-  { id: "litparse", name: "LiteParse", logo: "📄" },
   { id: "mineru-diffusion", name: "MinerU-Diffusion", logo: "⚒️" }
 ] as const;
 

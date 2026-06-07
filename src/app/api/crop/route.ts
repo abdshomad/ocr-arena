@@ -39,12 +39,8 @@ export async function POST(req: NextRequest) {
       [stats.size, fileHash, filename]
     );
 
-    // Clear old items for this document
-    const docRes = await query("SELECT id FROM documents WHERE filename = $1", [filename]);
-    if (docRes.rowCount && docRes.rowCount > 0) {
-      const docId = docRes.rows[0].id;
-      await query("DELETE FROM ocr_items WHERE document_id = $1", [docId]);
-    }
+    // Clear old items inside document metadata
+    await query("UPDATE documents SET metadata = NULL WHERE filename = $1", [filename]);
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
